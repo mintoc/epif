@@ -84,9 +84,10 @@ names(weight.dat)[names(weight.dat) == "Total.weight..kg."] <- "Total.Weight"
 @
 
 Merge the bulk weights with the length data
-<<tidy = TRUE, eval = TRUE>>=
+<<tidy = FALSE, eval = TRUE>>=
 neph.dat3 <- merge(neph.dat2, 
-                   subset(weight.dat, Species == "Bulk")[, c("Mesh.Size", "HAUL", "Total.Weight")],
+                   subset(weight.dat, Species == "Bulk")[, c("Mesh.Size", "HAUL", 
+                                        "Total.Weight")],
                    by = c("Mesh.Size", "HAUL"))
 
 ## subset the data by mesh size
@@ -97,14 +98,14 @@ neph.100mm <- subset(neph.dat3, Mesh.Size == "100mm")
 
 ## convert HAUL to factor
 ## with levels depending on the haul weight
-neph.70mm$HAUL <- factor(neph.70mm$HAUL,
-                         levels = unique(neph.70mm$HAUL[order(neph.70mm$Total.Weight)]))
-neph.80mm$HAUL <- factor(neph.80mm$HAUL,
-                         levels = unique(neph.80mm$HAUL[order(neph.80mm$Total.Weight)]))
-neph.90mm$HAUL <- factor(neph.90mm$HAUL,
-                         levels = unique(neph.90mm$HAUL[order(neph.90mm$Total.Weight)]))
-neph.100mm$HAUL <- factor(neph.100mm$HAUL,
-                         levels = unique(neph.100mm$HAUL[order(neph.100mm$Total.Weight)]))
+neph.70mm$HAUL <- factor(neph.70mm$HAUL, levels = 
+                         unique(neph.70mm$HAUL[order(neph.70mm$Total.Weight)]))
+neph.80mm$HAUL <- factor(neph.80mm$HAUL, levels = 
+                         unique(neph.80mm$HAUL[order(neph.80mm$Total.Weight)]))
+neph.90mm$HAUL <- factor(neph.90mm$HAUL, levels = 
+                         unique(neph.90mm$HAUL[order(neph.90mm$Total.Weight)]))
+neph.100mm$HAUL <- factor(neph.100mm$HAUL, levels = 
+                          unique(neph.100mm$HAUL[order(neph.100mm$Total.Weight)]))
 @ 
 
 
@@ -118,9 +119,14 @@ library(gridExtra)
 ## quick function for plot
 plot.lfreq <- function(data, title.string){
   p <- ggplot(data, aes(x = Carapace.Length, group = HAUL)) + 
-    geom_density(position = "stack", aes(fill = Total.Weight), colour = 1, lwd = 0.01) + 
-      xlim(10, 45) + scale_fill_gradient2(low = "white", high = "blue", limits = c(0, max(neph.dat3$Total.Weight))) + ggtitle(title.string) +
-        theme(axis.text.x=element_blank())
+    geom_density(position = "stack", 
+                 aes(fill = Total.Weight), 
+                 colour = 1, lwd = 0.005) + 
+                 xlim(10, 45) + 
+                 scale_fill_gradient2(low = "white", high = "blue", 
+                                      limits = c(0, max(neph.dat3$Total.Weight))) + 
+                 ggtitle(title.string) +
+                 theme(axis.text.x=element_blank())
   return(p)
 }
 

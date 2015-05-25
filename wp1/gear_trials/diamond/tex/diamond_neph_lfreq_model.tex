@@ -160,8 +160,10 @@ Merge the bulk weights with the length data
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
-\hlstd{neph.dat3} \hlkwb{<-} \hlkwd{merge}\hlstd{(neph.dat2,} \hlkwd{subset}\hlstd{(weight.dat, Species} \hlopt{==} \hlstr{"Bulk"}\hlstd{)[,} \hlkwd{c}\hlstd{(}\hlstr{"Mesh.Size"}\hlstd{,}
-    \hlstr{"HAUL"}\hlstd{,} \hlstr{"Total.Weight"}\hlstd{)],} \hlkwc{by} \hlstd{=} \hlkwd{c}\hlstd{(}\hlstr{"Mesh.Size"}\hlstd{,} \hlstr{"HAUL"}\hlstd{))}
+\hlstd{neph.dat3} \hlkwb{<-} \hlkwd{merge}\hlstd{(neph.dat2,}
+                   \hlkwd{subset}\hlstd{(weight.dat, Species} \hlopt{==} \hlstr{"Bulk"}\hlstd{)[,} \hlkwd{c}\hlstd{(}\hlstr{"Mesh.Size"}\hlstd{,} \hlstr{"HAUL"}\hlstd{,}
+                                        \hlstr{"Total.Weight"}\hlstd{)],}
+                   \hlkwc{by} \hlstd{=} \hlkwd{c}\hlstd{(}\hlstr{"Mesh.Size"}\hlstd{,} \hlstr{"HAUL"}\hlstd{))}
 
 \hlcom{## subset the data by mesh size}
 \hlstd{neph.70mm} \hlkwb{<-} \hlkwd{subset}\hlstd{(neph.dat3, Mesh.Size} \hlopt{==} \hlstr{"70mm"}\hlstd{)}
@@ -169,11 +171,16 @@ Merge the bulk weights with the length data
 \hlstd{neph.90mm} \hlkwb{<-} \hlkwd{subset}\hlstd{(neph.dat3, Mesh.Size} \hlopt{==} \hlstr{"90mm"}\hlstd{)}
 \hlstd{neph.100mm} \hlkwb{<-} \hlkwd{subset}\hlstd{(neph.dat3, Mesh.Size} \hlopt{==} \hlstr{"100mm"}\hlstd{)}
 
-\hlcom{## convert HAUL to factor with levels depending on the haul weight}
-\hlstd{neph.70mm}\hlopt{$}\hlstd{HAUL} \hlkwb{<-} \hlkwd{factor}\hlstd{(neph.70mm}\hlopt{$}\hlstd{HAUL,} \hlkwc{levels} \hlstd{=} \hlkwd{unique}\hlstd{(neph.70mm}\hlopt{$}\hlstd{HAUL[}\hlkwd{order}\hlstd{(neph.70mm}\hlopt{$}\hlstd{Total.Weight)]))}
-\hlstd{neph.80mm}\hlopt{$}\hlstd{HAUL} \hlkwb{<-} \hlkwd{factor}\hlstd{(neph.80mm}\hlopt{$}\hlstd{HAUL,} \hlkwc{levels} \hlstd{=} \hlkwd{unique}\hlstd{(neph.80mm}\hlopt{$}\hlstd{HAUL[}\hlkwd{order}\hlstd{(neph.80mm}\hlopt{$}\hlstd{Total.Weight)]))}
-\hlstd{neph.90mm}\hlopt{$}\hlstd{HAUL} \hlkwb{<-} \hlkwd{factor}\hlstd{(neph.90mm}\hlopt{$}\hlstd{HAUL,} \hlkwc{levels} \hlstd{=} \hlkwd{unique}\hlstd{(neph.90mm}\hlopt{$}\hlstd{HAUL[}\hlkwd{order}\hlstd{(neph.90mm}\hlopt{$}\hlstd{Total.Weight)]))}
-\hlstd{neph.100mm}\hlopt{$}\hlstd{HAUL} \hlkwb{<-} \hlkwd{factor}\hlstd{(neph.100mm}\hlopt{$}\hlstd{HAUL,} \hlkwc{levels} \hlstd{=} \hlkwd{unique}\hlstd{(neph.100mm}\hlopt{$}\hlstd{HAUL[}\hlkwd{order}\hlstd{(neph.100mm}\hlopt{$}\hlstd{Total.Weight)]))}
+\hlcom{## convert HAUL to factor}
+\hlcom{## with levels depending on the haul weight}
+\hlstd{neph.70mm}\hlopt{$}\hlstd{HAUL} \hlkwb{<-} \hlkwd{factor}\hlstd{(neph.70mm}\hlopt{$}\hlstd{HAUL,} \hlkwc{levels} \hlstd{=}
+                         \hlkwd{unique}\hlstd{(neph.70mm}\hlopt{$}\hlstd{HAUL[}\hlkwd{order}\hlstd{(neph.70mm}\hlopt{$}\hlstd{Total.Weight)]))}
+\hlstd{neph.80mm}\hlopt{$}\hlstd{HAUL} \hlkwb{<-} \hlkwd{factor}\hlstd{(neph.80mm}\hlopt{$}\hlstd{HAUL,} \hlkwc{levels} \hlstd{=}
+                         \hlkwd{unique}\hlstd{(neph.80mm}\hlopt{$}\hlstd{HAUL[}\hlkwd{order}\hlstd{(neph.80mm}\hlopt{$}\hlstd{Total.Weight)]))}
+\hlstd{neph.90mm}\hlopt{$}\hlstd{HAUL} \hlkwb{<-} \hlkwd{factor}\hlstd{(neph.90mm}\hlopt{$}\hlstd{HAUL,} \hlkwc{levels} \hlstd{=}
+                         \hlkwd{unique}\hlstd{(neph.90mm}\hlopt{$}\hlstd{HAUL[}\hlkwd{order}\hlstd{(neph.90mm}\hlopt{$}\hlstd{Total.Weight)]))}
+\hlstd{neph.100mm}\hlopt{$}\hlstd{HAUL} \hlkwb{<-} \hlkwd{factor}\hlstd{(neph.100mm}\hlopt{$}\hlstd{HAUL,} \hlkwc{levels} \hlstd{=}
+                          \hlkwd{unique}\hlstd{(neph.100mm}\hlopt{$}\hlstd{HAUL[}\hlkwd{order}\hlstd{(neph.100mm}\hlopt{$}\hlstd{Total.Weight)]))}
 \end{alltt}
 \end{kframe}
 \end{knitrout}
@@ -191,9 +198,14 @@ Produce a summary plot of the data by length, haul and catch weight.
 \hlcom{## quick function for plot}
 \hlstd{plot.lfreq} \hlkwb{<-} \hlkwa{function}\hlstd{(}\hlkwc{data}\hlstd{,} \hlkwc{title.string}\hlstd{)\{}
   \hlstd{p} \hlkwb{<-} \hlkwd{ggplot}\hlstd{(data,} \hlkwd{aes}\hlstd{(}\hlkwc{x} \hlstd{= Carapace.Length,} \hlkwc{group} \hlstd{= HAUL))} \hlopt{+}
-    \hlkwd{geom_density}\hlstd{(}\hlkwc{position} \hlstd{=} \hlstr{"stack"}\hlstd{,} \hlkwd{aes}\hlstd{(}\hlkwc{fill} \hlstd{= Total.Weight),} \hlkwc{colour} \hlstd{=} \hlnum{1}\hlstd{,} \hlkwc{lwd} \hlstd{=} \hlnum{0.01}\hlstd{)} \hlopt{+}
-      \hlkwd{xlim}\hlstd{(}\hlnum{10}\hlstd{,} \hlnum{45}\hlstd{)} \hlopt{+} \hlkwd{scale_fill_gradient2}\hlstd{(}\hlkwc{low} \hlstd{=} \hlstr{"white"}\hlstd{,} \hlkwc{high} \hlstd{=} \hlstr{"blue"}\hlstd{,} \hlkwc{limits} \hlstd{=} \hlkwd{c}\hlstd{(}\hlnum{0}\hlstd{,} \hlkwd{max}\hlstd{(neph.dat3}\hlopt{$}\hlstd{Total.Weight)))} \hlopt{+} \hlkwd{ggtitle}\hlstd{(title.string)} \hlopt{+}
-        \hlkwd{theme}\hlstd{(}\hlkwc{axis.text.x}\hlstd{=}\hlkwd{element_blank}\hlstd{())}
+    \hlkwd{geom_density}\hlstd{(}\hlkwc{position} \hlstd{=} \hlstr{"stack"}\hlstd{,}
+                 \hlkwd{aes}\hlstd{(}\hlkwc{fill} \hlstd{= Total.Weight),}
+                 \hlkwc{colour} \hlstd{=} \hlnum{1}\hlstd{,} \hlkwc{lwd} \hlstd{=} \hlnum{0.005}\hlstd{)} \hlopt{+}
+                 \hlkwd{xlim}\hlstd{(}\hlnum{10}\hlstd{,} \hlnum{45}\hlstd{)} \hlopt{+}
+                 \hlkwd{scale_fill_gradient2}\hlstd{(}\hlkwc{low} \hlstd{=} \hlstr{"white"}\hlstd{,} \hlkwc{high} \hlstd{=} \hlstr{"blue"}\hlstd{,}
+                                      \hlkwc{limits} \hlstd{=} \hlkwd{c}\hlstd{(}\hlnum{0}\hlstd{,} \hlkwd{max}\hlstd{(neph.dat3}\hlopt{$}\hlstd{Total.Weight)))} \hlopt{+}
+                 \hlkwd{ggtitle}\hlstd{(title.string)} \hlopt{+}
+                 \hlkwd{theme}\hlstd{(}\hlkwc{axis.text.x}\hlstd{=}\hlkwd{element_blank}\hlstd{())}
   \hlkwd{return}\hlstd{(p)}
 \hlstd{\}}
 
