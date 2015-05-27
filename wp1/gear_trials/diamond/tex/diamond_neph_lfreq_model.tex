@@ -78,6 +78,8 @@
 
 \maketitle
 
+%%\tableofcontents
+
 \section{Data}
 Read in length data and modify some column names and variable labels for use below.
 
@@ -93,16 +95,7 @@ Read in length data and modify some column names and variable labels for use bel
 
 \hlcom{## Show the first 2 rows}
 \hlkwd{head}\hlstd{(neph.dat,} \hlnum{2}\hlstd{)}
-\end{alltt}
-\begin{verbatim}
-##           Vessel       DATE HAUL COMPARTMENT Mesh.Size  SPECIES
-## 1 Celtic Warrior 2014-07-19    1     Control      70mm Nephrops
-## 2 Celtic Warrior 2014-07-19    1     Control      70mm Nephrops
-##   Carapace.Length..mm.. COUNT SUBSRATIO
-## 1                    16     1         1
-## 2                    17    11         1
-\end{verbatim}
-\begin{alltt}
+
 \hlcom{## Change the carapace length name}
 \hlkwd{names}\hlstd{(neph.dat)[}\hlkwd{names}\hlstd{(neph.dat)} \hlopt{==} \hlstr{"Carapace.Length..mm.."}\hlstd{]} \hlkwb{<-} \hlstr{"Carapace.Length"}
 
@@ -126,6 +119,7 @@ Make one row per length measurement assuming, for example, that a sub-sampling r
 \end{kframe}
 \end{knitrout}
 %% 
+
 Read in the haul weights
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
@@ -137,16 +131,7 @@ Read in the haul weights
 
 \hlcom{## Show the first 2 rows}
 \hlkwd{head}\hlstd{(weight.dat,} \hlnum{2}\hlstd{)}
-\end{alltt}
-\begin{verbatim}
-##         Date Haul.. Compartment Mesh.Size Species Total.weight..kg.
-## 1 2014-07-19      1       TEST1      90mm    Bulk             26.28
-## 2 2014-07-19      1       TEST1      90mm Haddock              0.38
-##   Sbsample.weight..kg.
-## 1                     
-## 2
-\end{verbatim}
-\begin{alltt}
+
 \hlcom{## create a new 'HAUL' variable for the merge}
 \hlstd{weight.dat}\hlopt{$}\hlstd{HAUL} \hlkwb{<-} \hlkwd{paste}\hlstd{(}\hlstr{"H"}\hlstd{, weight.dat}\hlopt{$}\hlstd{Haul..,} \hlkwc{sep} \hlstd{=} \hlstr{""}\hlstd{)}
 
@@ -209,23 +194,128 @@ Produce a summary plot of the data by length, haul and catch weight.
   \hlkwd{return}\hlstd{(p)}
 \hlstd{\}}
 
-\hlstd{p70mm} \hlkwb{<-} \hlkwd{plot.lfreq}\hlstd{(neph.70mm,} \hlstr{"70mm"}\hlstd{)}
-\hlstd{p80mm} \hlkwb{<-} \hlkwd{plot.lfreq}\hlstd{(neph.80mm,} \hlstr{"80mm"}\hlstd{)}
-\hlstd{p90mm} \hlkwb{<-} \hlkwd{plot.lfreq}\hlstd{(neph.90mm,} \hlstr{"90mm"}\hlstd{)}
-\hlstd{p100mm} \hlkwb{<-} \hlkwd{plot.lfreq}\hlstd{(neph.100mm,} \hlstr{"100mm"}\hlstd{)}
+\hlstd{p70mm} \hlkwb{<-} \hlkwd{plot.lfreq}\hlstd{(}\hlkwc{data} \hlstd{= neph.70mm,} \hlkwc{title.string} \hlstd{=} \hlstr{"70mm"}\hlstd{)}
+\hlstd{p80mm} \hlkwb{<-} \hlkwd{plot.lfreq}\hlstd{(}\hlkwc{data} \hlstd{= neph.80mm,} \hlkwc{title.string} \hlstd{=} \hlstr{"80mm"}\hlstd{)}
+\hlstd{p90mm} \hlkwb{<-} \hlkwd{plot.lfreq}\hlstd{(}\hlkwc{data} \hlstd{= neph.90mm,} \hlkwc{title.string} \hlstd{=} \hlstr{"90mm"}\hlstd{)}
+\hlstd{p100mm} \hlkwb{<-} \hlkwd{plot.lfreq}\hlstd{(}\hlkwc{data} \hlstd{= neph.100mm,} \hlkwc{title.string} \hlstd{=} \hlstr{"100mm"}\hlstd{)}
 
 \hlkwd{grid.arrange}\hlstd{(p70mm, p80mm, p90mm, p100mm,} \hlkwc{ncol} \hlstd{=} \hlnum{1}\hlstd{)}
 \end{alltt}
+\end{kframe}
+\end{knitrout}
+
+\section{Models}
+The first model we'll try is a model assuming all lengths come from a normal distribution with a single mean $\mu$ and standard deviation $\sigma$
+
+\begin{equation}
+  l_i \sim \textnormal{N}(\mu, \sigma^2)
+\end{equation}
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{lm0} \hlkwb{<-} \hlkwd{lm}\hlstd{(Carapace.Length} \hlopt{~} \hlnum{1}\hlstd{,} \hlkwc{data} \hlstd{= neph.dat3)}
+
+\hlkwd{summary}\hlstd{(lm0)}
+\end{alltt}
+\begin{verbatim}
+## 
+## Call:
+## lm(formula = Carapace.Length ~ 1, data = neph.dat3)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -20.698  -2.698  -0.698   3.302  53.302 
+## 
+## Coefficients:
+##              Estimate Std. Error t value Pr(>|t|)    
+## (Intercept) 28.698050   0.009518    3015   <2e-16 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 4.918 on 266990 degrees of freedom
+\end{verbatim}
+\begin{alltt}
+\hlcom{## predict the density}
+\hlstd{pred.df} \hlkwb{<-} \hlkwd{data.frame}\hlstd{(}\hlkwc{Carapace.Length} \hlstd{=} \hlkwd{seq}\hlstd{(}\hlnum{0}\hlstd{,} \hlnum{100}\hlstd{))}
+\hlstd{pred.df}\hlopt{$}\hlstd{dens} \hlkwb{<-} \hlkwd{dnorm}\hlstd{(pred.df}\hlopt{$}\hlstd{Carapace.Length,} \hlkwc{mean} \hlstd{=} \hlkwd{coef}\hlstd{(lm0)[}\hlnum{1}\hlstd{],} \hlkwc{sd} \hlstd{=} \hlkwd{summary}\hlstd{(lm0)}\hlopt{$}\hlstd{sigma)}
+
+\hlcom{## plot the distributional fit}
+\hlstd{p} \hlkwb{<-} \hlkwd{ggplot}\hlstd{(neph.dat3,} \hlkwd{aes}\hlstd{(}\hlkwc{x} \hlstd{= Carapace.Length))} \hlopt{+} \hlkwd{geom_histogram}\hlstd{(}\hlkwd{aes}\hlstd{(}\hlkwc{y} \hlstd{= ..density..),}
+    \hlkwc{fill} \hlstd{=} \hlstr{"slategrey"}\hlstd{,} \hlkwc{color} \hlstd{=} \hlstr{"white"}\hlstd{,} \hlkwc{binwidth} \hlstd{=} \hlnum{1}\hlstd{)} \hlopt{+} \hlkwd{xlim}\hlstd{(}\hlnum{10}\hlstd{,} \hlnum{50}\hlstd{)}
+
+\hlstd{p} \hlopt{+} \hlkwd{geom_line}\hlstd{(}\hlkwc{data} \hlstd{= pred.df,} \hlkwd{aes}\hlstd{(}\hlkwc{x} \hlstd{= Carapace.Length,} \hlkwc{y} \hlstd{= dens))}
+\end{alltt}
 \end{kframe}\begin{figure}
 
-{\centering \includegraphics[width=\maxwidth]{figure/unnamed-chunk-6-1} 
+{\centering \includegraphics[width=\maxwidth]{figure/unnamed-chunk-7-1} 
 
 }
 
-\caption[Stacked carapace length densities]{Stacked carapace length densities. Each haul is coloured according to the total bulk weight in that haul.}\label{fig:unnamed-chunk-6}
+\caption[Histogram of carapace length over all hauls and mesh sizes with overlayed fitted single normal curve]{Histogram of carapace length over all hauls and mesh sizes with overlayed fitted single normal curve.}\label{fig:unnamed-chunk-7}
 \end{figure}
 
 
 \end{knitrout}
 
+This model does not fit the data very well as there are large parts of the distribution not captured.
+%%
+Next model is to let the mean vary by mesh size
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{lm1} \hlkwb{<-} \hlkwd{lm}\hlstd{(Carapace.Length} \hlopt{~} \hlstd{Mesh.Size,} \hlkwc{data} \hlstd{= neph.dat3)}
+
+\hlkwd{summary}\hlstd{(lm1)}
+\end{alltt}
+\begin{verbatim}
+## 
+## Call:
+## lm(formula = Carapace.Length ~ Mesh.Size, data = neph.dat3)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -20.753  -3.303  -0.340   2.697  52.660 
+## 
+## Coefficients:
+##               Estimate Std. Error t value Pr(>|t|)    
+## (Intercept)   29.33990    0.01985 1478.23   <2e-16 ***
+## Mesh.Size70mm -0.86420    0.02690  -32.13   <2e-16 ***
+## Mesh.Size80mm -1.03668    0.02741  -37.82   <2e-16 ***
+## Mesh.Size90mm -0.58708    0.02756  -21.30   <2e-16 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 4.903 on 266987 degrees of freedom
+## Multiple R-squared:  0.006105,	Adjusted R-squared:  0.006094 
+## F-statistic: 546.7 on 3 and 266987 DF,  p-value: < 2.2e-16
+\end{verbatim}
+\begin{alltt}
+\hlcom{## predict the densities}
+\hlstd{pred.df} \hlkwb{<-} \hlkwd{expand.grid}\hlstd{(}\hlkwc{Carapace.Length} \hlstd{=} \hlkwd{seq}\hlstd{(}\hlnum{0}\hlstd{,} \hlnum{100}\hlstd{),} \hlkwc{Mesh.Size} \hlstd{=} \hlkwd{c}\hlstd{(}\hlstr{"70mm"}\hlstd{,}
+    \hlstr{"80mm"}\hlstd{,} \hlstr{"90mm"}\hlstd{,} \hlstr{"100mm"}\hlstd{))}
+
+\hlstd{pred.df}\hlopt{$}\hlstd{dens} \hlkwb{<-} \hlkwd{dnorm}\hlstd{(pred.df}\hlopt{$}\hlstd{Carapace.Length,} \hlkwc{mean} \hlstd{=} \hlkwd{predict}\hlstd{(lm1,} \hlkwc{newdata} \hlstd{= pred.df),}
+    \hlkwc{sd} \hlstd{=} \hlkwd{summary}\hlstd{(lm1)}\hlopt{$}\hlstd{sigma)}
+
+\hlcom{## plot the distributional fit}
+\hlstd{p} \hlkwb{<-} \hlkwd{ggplot}\hlstd{(neph.dat3,} \hlkwd{aes}\hlstd{(}\hlkwc{x} \hlstd{= Carapace.Length))} \hlopt{+} \hlkwd{geom_histogram}\hlstd{(}\hlkwd{aes}\hlstd{(}\hlkwc{y} \hlstd{= ..density..),}
+    \hlkwc{fill} \hlstd{=} \hlstr{"slategrey"}\hlstd{,} \hlkwc{color} \hlstd{=} \hlstr{"white"}\hlstd{,} \hlkwc{binwidth} \hlstd{=} \hlnum{1}\hlstd{)} \hlopt{+} \hlkwd{xlim}\hlstd{(}\hlnum{10}\hlstd{,} \hlnum{50}\hlstd{)} \hlopt{+} \hlkwd{facet_wrap}\hlstd{(}\hlopt{~}\hlstd{Mesh.Size)}
+
+\hlstd{p} \hlopt{+} \hlkwd{geom_line}\hlstd{(}\hlkwc{data} \hlstd{= pred.df,} \hlkwd{aes}\hlstd{(}\hlkwc{x} \hlstd{= Carapace.Length,} \hlkwc{y} \hlstd{= dens))}
+\end{alltt}
+\end{kframe}\begin{figure}
+
+{\centering \includegraphics[width=\maxwidth]{figure/unnamed-chunk-8-1} 
+
+}
+
+\caption[Histogram of carapace length by mesh size with overlayed normal curve with mean varying by mesh size]{Histogram of carapace length by mesh size with overlayed normal curve with mean varying by mesh size.}\label{fig:unnamed-chunk-8}
+\end{figure}
+
+
+\end{knitrout}
+
+
 \end{document}
+
