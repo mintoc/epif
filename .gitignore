@@ -15,6 +15,7 @@ emacs-config.el
 *.Rhistory
 *.docx
 *.xls*
+*.csv
 *.out
 *.aux
 

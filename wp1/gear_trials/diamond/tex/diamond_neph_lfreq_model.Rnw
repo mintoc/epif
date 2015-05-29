@@ -39,7 +39,7 @@ opts_chunk$set(size="footnotesize")
 \section{Data}
 Read in length data and modify some column names and variable labels for use below.
 
-<<tidy=TRUE, eval = FALSE, warning = FALSE>>=
+<<tidy=TRUE, eval = TRUE, warning = FALSE>>=
 library(gdata)
 
 setwd("../data")
@@ -69,7 +69,7 @@ neph.dat2 <- neph.dat[rep(1:n, times = round(neph.dat$COUNT/neph.dat$SUBSRATIO, 
 %% 
 
 Read in the haul weights
-<<tidy=TRUE, eval = FALSE>>=
+<<tidy=TRUE, eval = TRUE>>=
 setwd("../data")
 
 weight.dat <- read.xls("Celtic Warrior Diamond mesh July 2014 Celtic Sea.xls", 
@@ -87,7 +87,7 @@ names(weight.dat)[names(weight.dat) == "Total.weight..kg."] <- "Total.Weight"
 @
 
 Merge the bulk weights with the length data
-<<tidy = FALSE, eval = FALSE>>=
+<<tidy = FALSE, eval = TRUE>>=
 neph.dat3 <- merge(neph.dat2, 
                    subset(weight.dat, Species == "Bulk")[, c("Mesh.Size", "HAUL", 
                                         "Total.Weight")],
@@ -115,7 +115,7 @@ neph.100mm$HAUL <- factor(neph.100mm$HAUL, levels =
 %% 
 Produce a summary plot of the data by length, haul and catch weight.
 %%
-<<fig.width = 5, fig.height = 8, fig.align = "center", warning = FALSE, eval = FALSE, fig.cap = "Stacked carapace length densities. Each haul is coloured according to the total bulk weight in that haul.">>=
+<<fig.width = 5, fig.height = 8, fig.align = "center", warning = FALSE, eval = TRUE, fig.cap = "Stacked carapace length densities. Each haul is coloured according to the total bulk weight in that haul.">>=
 library(ggplot2)
 library(gridExtra)
 

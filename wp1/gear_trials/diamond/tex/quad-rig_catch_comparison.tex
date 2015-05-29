@@ -370,7 +370,206 @@ Finally overlay the fit on the sample proportions
 
 
 \end{knitrout}
-Next step might be to include other covariates in the model such as the bulk catch weights.
+
+\subsection{Including weight as a covariate}
+Make a row per observation and merge with the weight data
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlcom{## get a row per length measurement (raise them also)}
+\hlstd{n} \hlkwb{<-} \hlkwd{nrow}\hlstd{(neph.dat)}
+
+\hlcom{##neph.dat2 <- neph.dat[rep(1:n, times = }
+\hlcom{##                          round(neph.dat$COUNT/neph.dat$SUBSRATIO, 0)), ]}
+
+\hlcom{## Note: no raising here}
+\hlstd{neph.dat2} \hlkwb{<-} \hlstd{neph.dat[}\hlkwd{rep}\hlstd{(}\hlnum{1}\hlopt{:}\hlstd{n,} \hlkwc{times} \hlstd{= neph.dat}\hlopt{$}\hlstd{COUNT), ]}
+
+\hlstd{weight.dat} \hlkwb{<-} \hlkwd{read.xls}\hlstd{(}\hlstr{"../data/Celtic Warrior Diamond mesh July 2014 Celtic Sea.xls"}\hlstd{,}
+                       \hlkwc{sheet} \hlstd{=} \hlstr{"Weights"}\hlstd{,}
+                       \hlkwc{stringsAsFactors} \hlstd{=} \hlnum{FALSE}\hlstd{)}
+
+\hlcom{## Show the first 2 rows}
+\hlkwd{head}\hlstd{(weight.dat,} \hlnum{2}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+##         Date Haul.. Compartment Mesh.Size Species Total.weight..kg.
+## 1 2014-07-19      1       TEST1      90mm    Bulk             26.28
+## 2 2014-07-19      1       TEST1      90mm Haddock              0.38
+##   Sbsample.weight..kg.
+## 1                     
+## 2
+\end{verbatim}
+\begin{alltt}
+\hlcom{## create a new "HAUL" variable for the merge}
+\hlstd{weight.dat}\hlopt{$}\hlstd{HAUL} \hlkwb{<-} \hlkwd{paste}\hlstd{(}\hlstr{"H"}\hlstd{, weight.dat}\hlopt{$}\hlstd{Haul..,} \hlkwc{sep} \hlstd{=}\hlstr{""}\hlstd{)}
+
+\hlcom{## re-name total weight column}
+\hlkwd{names}\hlstd{(weight.dat)[}\hlkwd{names}\hlstd{(weight.dat)} \hlopt{==} \hlstr{"Total.weight..kg."}\hlstd{]} \hlkwb{<-} \hlstr{"Total.Weight"}
+
+\hlcom{## merge nephrops length and total bulk weight data}
+\hlstd{neph.dat3} \hlkwb{<-} \hlkwd{merge}\hlstd{(neph.dat2,}
+                   \hlkwd{subset}\hlstd{(weight.dat, Species} \hlopt{==} \hlstr{"Bulk"}\hlstd{)[,} \hlkwd{c}\hlstd{(}\hlstr{"Mesh.Size"}\hlstd{,} \hlstr{"HAUL"}\hlstd{,}
+                                        \hlstr{"Total.Weight"}\hlstd{)],}
+                   \hlkwc{by} \hlstd{=} \hlkwd{c}\hlstd{(}\hlstr{"Mesh.Size"}\hlstd{,} \hlstr{"HAUL"}\hlstd{))}
+
+\hlstd{max.length} \hlkwb{<-} \hlkwd{max}\hlstd{(neph.dat3}\hlopt{$}\hlstd{Carapace.Length)}
+\hlstd{neph.dat3}\hlopt{$}\hlstd{Carapace.Length} \hlkwb{<-} \hlstd{neph.dat3}\hlopt{$}\hlstd{Carapace.Length}\hlopt{/}\hlstd{max.length}
+\hlstd{neph.dat3}\hlopt{$}\hlstd{Carapace.Length2} \hlkwb{<-} \hlstd{neph.dat3}\hlopt{$}\hlstd{Carapace.Length}\hlopt{^}\hlnum{2}
+\hlstd{neph.dat3}\hlopt{$}\hlstd{Carapace.Length3} \hlkwb{<-} \hlstd{neph.dat3}\hlopt{$}\hlstd{Carapace.Length}\hlopt{^}\hlnum{3}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+Include weight in the fit
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlcom{## compare two ways of writing same model}
+\hlcom{## in matrix format, as before except without offset for the moment}
+\hlstd{mnom.length.matrix} \hlkwb{<-} \hlkwd{multinom}\hlstd{(neph.count.mat} \hlopt{~}
+                               \hlstd{Carapace.Length} \hlopt{+}
+                               \hlstd{Carapace.Length2} \hlopt{+}
+                               \hlstd{Carapace.Length3,} \hlkwc{data} \hlstd{= neph.cast)}
+\end{alltt}
+\begin{verbatim}
+## # weights:  20 (12 variable)
+## initial  value 65846.209564 
+## iter  10 value 65594.036234
+## iter  20 value 65560.638668
+## final  value 65558.314009 
+## converged
+\end{verbatim}
+\begin{alltt}
+\hlcom{## in long format (row per measurement)}
+\hlstd{mnom.length.long} \hlkwb{<-} \hlkwd{multinom}\hlstd{(fMesh.Size} \hlopt{~}
+                             \hlstd{Carapace.Length} \hlopt{+}
+                             \hlstd{Carapace.Length2} \hlopt{+}
+                             \hlstd{Carapace.Length3,} \hlkwc{data} \hlstd{= neph.dat3)}
+\end{alltt}
+\begin{verbatim}
+## # weights:  20 (12 variable)
+## initial  value 65846.209564 
+## iter  10 value 65594.036234
+## iter  20 value 65560.638668
+## final  value 65558.314009 
+## converged
+\end{verbatim}
+\begin{alltt}
+\hlkwd{AIC}\hlstd{(mnom.length.matrix, mnom.length.long)}
+\end{alltt}
+\begin{verbatim}
+##                    df      AIC
+## mnom.length.matrix 12 131140.6
+## mnom.length.long   12 131140.6
+\end{verbatim}
+\begin{alltt}
+\hlcom{## Same model, now include bulk weight in long format model }
+\hlcom{## in addition to carapace polynomials}
+
+\hlstd{mnom.length.bulk} \hlkwb{<-} \hlkwd{multinom}\hlstd{(fMesh.Size} \hlopt{~}
+                             \hlstd{Carapace.Length} \hlopt{+}
+                             \hlstd{Carapace.Length2} \hlopt{+}
+                             \hlstd{Carapace.Length3} \hlopt{+} \hlstd{Total.Weight,} \hlkwc{data} \hlstd{= neph.dat3)}
+\end{alltt}
+\begin{verbatim}
+## # weights:  24 (15 variable)
+## initial  value 65846.209564 
+## iter  10 value 65467.670510
+## iter  20 value 65392.143368
+## iter  30 value 65389.022743
+## iter  30 value 65389.022490
+## iter  30 value 65389.022490
+## final  value 65389.022490 
+## converged
+\end{verbatim}
+\begin{alltt}
+\hlkwd{AIC}\hlstd{(mnom.length.long, mnom.length.bulk)}
+\end{alltt}
+\begin{verbatim}
+##                  df      AIC
+## mnom.length.long 12 131140.6
+## mnom.length.bulk 15 130808.0
+\end{verbatim}
+\begin{alltt}
+\hlcom{## interaction between length and bulk}
+\hlstd{mnom.length.bulk.inter} \hlkwb{<-} \hlkwd{multinom}\hlstd{(fMesh.Size} \hlopt{~}
+                                   \hlstd{Carapace.Length} \hlopt{+}
+                                   \hlstd{Carapace.Length2} \hlopt{+}
+                                   \hlstd{Carapace.Length3} \hlopt{+}
+                                   \hlstd{Total.Weight} \hlopt{+}
+                                   \hlstd{Carapace.Length}\hlopt{:}\hlstd{Total.Weight} \hlopt{+}
+                                   \hlstd{Carapace.Length2}\hlopt{:}\hlstd{Total.Weight} \hlopt{+}
+                                   \hlstd{Carapace.Length3}\hlopt{:}\hlstd{Total.Weight}
+                                   \hlstd{,} \hlkwc{data} \hlstd{= neph.dat3)}
+\end{alltt}
+\begin{verbatim}
+## # weights:  36 (24 variable)
+## initial  value 65846.209564 
+## iter  10 value 65582.220539
+## iter  20 value 65400.493488
+## iter  30 value 65364.125707
+## iter  40 value 65361.240613
+## final  value 65361.182171 
+## converged
+\end{verbatim}
+\begin{alltt}
+\hlkwd{AIC}\hlstd{(mnom.length.bulk, mnom.length.bulk.inter)}
+\end{alltt}
+\begin{verbatim}
+##                        df      AIC
+## mnom.length.bulk       15 130808.0
+## mnom.length.bulk.inter 24 130770.4
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+Get predictions for low, medium and high catch weights
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{low.med.high.bulk} \hlkwb{<-} \hlkwd{quantile}\hlstd{(weight.dat[weight.dat}\hlopt{$}\hlstd{Species} \hlopt{==} \hlstr{"Bulk"}\hlstd{,]}\hlopt{$}\hlstd{Total.Weight,}
+                              \hlkwc{p} \hlstd{=} \hlkwd{c}\hlstd{(}\hlnum{0.1}\hlstd{,} \hlnum{0.5}\hlstd{,} \hlnum{0.9}\hlstd{))}
+
+\hlstd{pred.df} \hlkwb{<-} \hlkwd{expand.grid}\hlstd{(}\hlkwc{Carapace.Length} \hlstd{= pred.length,}
+                       \hlkwc{Total.Weight} \hlstd{= low.med.high.bulk)}
+\hlstd{pred.df}\hlopt{$}\hlstd{Carapace.Length2} \hlkwb{<-} \hlstd{pred.df}\hlopt{$}\hlstd{Carapace.Length}\hlopt{^}\hlnum{2}
+\hlstd{pred.df}\hlopt{$}\hlstd{Carapace.Length3} \hlkwb{<-} \hlstd{pred.df}\hlopt{$}\hlstd{Carapace.Length}\hlopt{^}\hlnum{3}
+
+\hlstd{mnom.pred} \hlkwb{<-} \hlkwd{predict}\hlstd{(mnom.length.bulk.inter,} \hlkwc{newdata} \hlstd{= pred.df,} \hlkwc{type} \hlstd{=} \hlstr{"prob"}\hlstd{)}
+
+\hlstd{m} \hlkwb{<-} \hlkwd{dim}\hlstd{(mnom.pred)[}\hlnum{1}\hlstd{]}
+
+\hlstd{mnom.pred.df} \hlkwb{<-} \hlkwd{data.frame}\hlstd{(}
+                  \hlkwc{Mesh.Size} \hlstd{=} \hlkwd{factor}\hlstd{(}\hlkwd{rep}\hlstd{(}\hlkwd{c}\hlstd{(}\hlstr{"70mm"}\hlstd{,} \hlstr{"80mm"}\hlstd{,} \hlstr{"90mm"}\hlstd{,} \hlstr{"100mm"}\hlstd{),}
+                    \hlkwc{each} \hlstd{= m),} \hlkwc{levels} \hlstd{=} \hlkwd{c}\hlstd{(}\hlstr{"70mm"}\hlstd{,} \hlstr{"80mm"}\hlstd{,} \hlstr{"90mm"}\hlstd{,} \hlstr{"100mm"}\hlstd{)),}
+                  \hlkwc{Carapace.Length} \hlstd{=} \hlkwd{rep}\hlstd{(pred.df}\hlopt{$}\hlstd{Carapace.Length,} \hlkwc{times} \hlstd{=} \hlnum{4}\hlstd{),}
+                  \hlkwc{Total.Weight} \hlstd{=} \hlkwd{rep}\hlstd{(pred.df}\hlopt{$}\hlstd{Total.Weight,} \hlkwc{times} \hlstd{=} \hlnum{4}\hlstd{),}
+                  \hlkwc{proportion} \hlstd{=} \hlkwd{c}\hlstd{(mnom.pred))}
+
+\hlstd{mnom.pred.df}\hlopt{$}\hlstd{Bulk.Weight} \hlkwb{<-}
+  \hlkwd{ifelse}\hlstd{(mnom.pred.df}\hlopt{$}\hlstd{Total.Weight} \hlopt{==} \hlstd{low.med.high.bulk[}\hlnum{1}\hlstd{],} \hlstr{"Low"}\hlstd{,}
+         \hlkwd{ifelse}\hlstd{(mnom.pred.df}\hlopt{$}\hlstd{Total.Weight} \hlopt{==} \hlstd{low.med.high.bulk[}\hlnum{2}\hlstd{],} \hlstr{"Medium"}\hlstd{,} \hlstr{"High"}\hlstd{)}
+         \hlstd{)}
+
+
+\hlstd{p} \hlopt{+} \hlkwd{geom_line}\hlstd{(}\hlkwc{data} \hlstd{= mnom.pred.df,}
+              \hlkwd{aes}\hlstd{(}\hlkwc{x} \hlstd{= Carapace.Length}\hlopt{*}\hlstd{max.length,} \hlkwc{y} \hlstd{= proportion,}
+                  \hlkwc{group} \hlstd{= Bulk.Weight,}
+                  \hlkwc{colour} \hlstd{= Bulk.Weight))} \hlopt{+}
+  \hlkwd{geom_hline}\hlstd{(}\hlkwd{aes}\hlstd{(}\hlkwc{yintercept} \hlstd{=} \hlnum{0.25}\hlstd{),} \hlkwc{linetype} \hlstd{=} \hlstr{"dashed"}\hlstd{)} \hlopt{+}
+  \hlkwd{geom_vline}\hlstd{(}\hlkwd{aes}\hlstd{(}\hlkwc{xintercept} \hlstd{=} \hlnum{25}\hlstd{),} \hlkwc{linetype} \hlstd{=} \hlstr{"dashed"}\hlstd{)} \hlopt{+}
+  \hlkwd{scale_colour_brewer}\hlstd{(}\hlkwc{palette}\hlstd{=}\hlstr{"Set1"}\hlstd{)}
+\end{alltt}
+\end{kframe}\begin{figure}
+\includegraphics[width=\maxwidth]{figure/unnamed-chunk-10-1} \caption[Predicted influence of the bulk catch weight (low]{Predicted influence of the bulk catch weight (low: 26kg, medium: 61kg, high: 93kg) on the proportion of Nephrops catch retained per net. Null hypothesis of equal retention is displayed as the dashed line at 0.25. Minimum landing size of 25mm is shown as the vertical dashed line.}\label{fig:unnamed-chunk-10}
+\end{figure}
+
+
+\end{knitrout}
 
 \bibliography{../../../../misc/epif_bibliography}
 \bibliographystyle{../../../../misc/cjfas}
