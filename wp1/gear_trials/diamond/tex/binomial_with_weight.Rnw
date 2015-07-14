@@ -1,0 +1,110 @@
+%% knit("binomial_with_weight.Rnw")
+
+\documentclass[12pt]{article}
+\usepackage{times}
+\usepackage{hyperref}
+\hypersetup{pdfpagemode=UseNone} % don't show bookmarks on initial view
+\hypersetup{colorlinks, urlcolor={blue}}
+\usepackage{graphicx}
+% revise margins
+\setlength{\headheight}{0.0in}
+\setlength{\topmargin}{0.0in}
+\setlength{\headsep}{0.0in}
+\setlength{\textheight}{8.65in}
+\setlength{\footskip}{0.35in}
+\setlength{\oddsidemargin}{0.0in}
+\setlength{\evensidemargin}{0.0in}
+\setlength{\textwidth}{6.5in}
+\usepackage{}
+\setlength{\parskip}{6pt}
+\setlength{\parindent}{0pt}
+
+\title{Binomial with weights}
+\author{}
+\date{}
+
+\begin{document}
+
+<<echo=FALSE>>=
+library(knitr)
+opts_chunk$set(size="footnotesize")
+## set the working directory
+##setwd('../tex'); 
+@
+
+\maketitle
+
+The Binomial mass function is given by
+\begin{equation}
+  P(X = k) = {n \choose k} p^k (1-p)^{n-k},
+\end{equation}
+denoting the probability of obtaining $k$ successes out of $n$ trials.\\
+The experimental conditions vary in each trial, affecting the probability of success. In particular, we focus on a situation where the either side of the coin we flip can be one of two values: \emph{heavy} or \emph{light} and that this varies by trial and is recorded by trial. Now the probability of $k$ heads depends on the weight of the heads side \underline{and} the weight of the tails side, notationally
+\begin{equation}
+  P(X = k | w_{h}, w_{t}) = {n \choose k} p_{w_{h}, w_{t}}^k (1-p_{w_{h}, w_{t}})^{n-k},
+\end{equation}
+where $w_h$ and $w_t$ are the weight of the heads and tails sides, respectively. The probability of heads now depend on those weights.\\
+%%
+Data for 8 hypothetical trials might look like
+
+<<eval = TRUE>>=
+df0 <- expand.grid(heads.weight = c("light", "heavy"), 
+                   tails.weight = c("light", "heavy"))
+
+df <- cbind(outcome = c("H","T","H","H","T","T","H", "T"), 
+            df0[rep(1:4, each = 2), 2:1])
+
+df$outcome <- factor(as.character(df$outcome), levels = c("T", "H"))
+
+rownames(df) <- NULL
+
+print(df, row.names = FALSE)
+@
+
+The associated probabilities of heads under given conditions are
+<<eval = TRUE>>=
+table(df[df$outcome == "H", c("tails.weight", "heads.weight")])/
+table(df[, c("tails.weight", "heads.weight")])
+@ 
+First way of analyzing the data using a glm, effectively a Bernoulli trial 
+
+<<eval = TRUE>>=
+glm0 <- glm(outcome ~ tails.weight * heads.weight, family = "binomial", data = df)
+
+pred.df <- unique(df[, 2:3])
+
+pred.df$p0 <- round(predict(glm0, newdata = pred.df, type = "response"), 6)
+
+pred.df
+
+@ 
+Second method is to group the counts
+
+<<eval = TRUE>>=
+library(reshape2)
+(df.binom <- dcast(df, heads.weight + tails.weight ~ outcome, 
+                   fun.aggregate = length))
+
+glm1 <- glm(cbind(H, T) ~ tails.weight * heads.weight, family = "binomial", 
+            data = df.binom)
+
+pred.df$p1 <- round(predict(glm1, newdata = pred.df, type = "response"), 6)
+
+pred.df
+@ 
+
+Third method is incorrect but mimics the issue with how weights were treated in the  multinomial fits to date
+
+<<eval = TRUE>>=
+df$weight <- with(df, ifelse(outcome == "H", as.character(heads.weight), 
+                             as.character(tails.weight)))
+
+df
+
+glm2 <- glm(outcome ~ weight, family = "binomial", data = df)
+
+coef(glm2)
+@ 
+Note that the weight effect is cancelled out. When there are component-specific influencing the probabilities of success, these should be included as separate variables, at least the way the data have been generated above. For the continuous weight data of the gear trials, we will include separate variables for the bulk-weight of each cod-end and the second order interactions as a first pass.
+
+\end{document}

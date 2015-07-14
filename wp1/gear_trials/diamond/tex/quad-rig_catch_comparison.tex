@@ -534,6 +534,16 @@ Get predictions for low, medium and high catch weights
 \hlstd{low.med.high.bulk} \hlkwb{<-} \hlkwd{quantile}\hlstd{(weight.dat[weight.dat}\hlopt{$}\hlstd{Species} \hlopt{==} \hlstr{"Bulk"}\hlstd{,]}\hlopt{$}\hlstd{Total.Weight,}
                               \hlkwc{p} \hlstd{=} \hlkwd{c}\hlstd{(}\hlnum{0.1}\hlstd{,} \hlnum{0.5}\hlstd{,} \hlnum{0.9}\hlstd{))}
 
+\hlstd{low.med.high.bulk}
+\end{alltt}
+\begin{verbatim}
+##    10%    50%    90% 
+## 26.132 60.500 93.280
+\end{verbatim}
+\begin{alltt}
+\hlcom{## set high to 120kg}
+\hlstd{low.med.high.bulk[}\hlnum{3}\hlstd{]} \hlkwb{<-} \hlnum{120}
+
 \hlstd{pred.df} \hlkwb{<-} \hlkwd{expand.grid}\hlstd{(}\hlkwc{Carapace.Length} \hlstd{= pred.length,}
                        \hlkwc{Total.Weight} \hlstd{= low.med.high.bulk)}
 \hlstd{pred.df}\hlopt{$}\hlstd{Carapace.Length2} \hlkwb{<-} \hlstd{pred.df}\hlopt{$}\hlstd{Carapace.Length}\hlopt{^}\hlnum{2}
@@ -551,21 +561,24 @@ Get predictions for low, medium and high catch weights
                   \hlkwc{proportion} \hlstd{=} \hlkwd{c}\hlstd{(mnom.pred))}
 
 \hlstd{mnom.pred.df}\hlopt{$}\hlstd{Bulk.Weight} \hlkwb{<-}
-  \hlkwd{ifelse}\hlstd{(mnom.pred.df}\hlopt{$}\hlstd{Total.Weight} \hlopt{==} \hlstd{low.med.high.bulk[}\hlnum{1}\hlstd{],} \hlstr{"Low"}\hlstd{,}
-         \hlkwd{ifelse}\hlstd{(mnom.pred.df}\hlopt{$}\hlstd{Total.Weight} \hlopt{==} \hlstd{low.med.high.bulk[}\hlnum{2}\hlstd{],} \hlstr{"Medium"}\hlstd{,} \hlstr{"High"}\hlstd{)}
+  \hlkwd{ifelse}\hlstd{(mnom.pred.df}\hlopt{$}\hlstd{Total.Weight} \hlopt{==} \hlstd{low.med.high.bulk[}\hlnum{1}\hlstd{],} \hlstr{"Low (26kg)"}\hlstd{,}
+         \hlkwd{ifelse}\hlstd{(mnom.pred.df}\hlopt{$}\hlstd{Total.Weight} \hlopt{==} \hlstd{low.med.high.bulk[}\hlnum{2}\hlstd{],} \hlstr{"Medium (60.5kg)"}\hlstd{,} \hlstr{"High (120kg)"}\hlstd{)}
          \hlstd{)}
 
+\hlstd{mnom.pred.df}\hlopt{$}\hlstd{Bulk.Weight} \hlkwb{<-} \hlkwd{factor}\hlstd{(mnom.pred.df}\hlopt{$}\hlstd{Bulk.Weight,}
+                                   \hlkwc{levels} \hlstd{=} \hlkwd{c}\hlstd{(}\hlstr{"Low (26kg)"}\hlstd{,} \hlstr{"Medium (60.5kg)"}\hlstd{,} \hlstr{"High (120kg)"}\hlstd{))}
 
 \hlstd{p} \hlopt{+} \hlkwd{geom_line}\hlstd{(}\hlkwc{data} \hlstd{= mnom.pred.df,}
               \hlkwd{aes}\hlstd{(}\hlkwc{x} \hlstd{= Carapace.Length}\hlopt{*}\hlstd{max.length,} \hlkwc{y} \hlstd{= proportion,}
                   \hlkwc{group} \hlstd{= Bulk.Weight,}
                   \hlkwc{colour} \hlstd{= Bulk.Weight))} \hlopt{+}
-  \hlkwd{geom_hline}\hlstd{(}\hlkwd{aes}\hlstd{(}\hlkwc{yintercept} \hlstd{=} \hlnum{0.25}\hlstd{),} \hlkwc{linetype} \hlstd{=} \hlstr{"dashed"}\hlstd{)} \hlopt{+}
-  \hlkwd{geom_vline}\hlstd{(}\hlkwd{aes}\hlstd{(}\hlkwc{xintercept} \hlstd{=} \hlnum{25}\hlstd{),} \hlkwc{linetype} \hlstd{=} \hlstr{"dashed"}\hlstd{)} \hlopt{+}
-  \hlkwd{scale_colour_brewer}\hlstd{(}\hlkwc{palette}\hlstd{=}\hlstr{"Set1"}\hlstd{)}
+  \hlkwd{scale_colour_manual}\hlstd{(}\hlkwc{values}\hlstd{=}\hlkwd{c}\hlstd{(}\hlstr{"#619CFF"}\hlstd{,} \hlstr{"#00BA38"}\hlstd{,} \hlstr{"#FF0000"}\hlstd{))} \hlopt{+}
+\hlcom{##scale_colour_manual(values = c("blue", "green", "red")) +}
+\hlkwd{geom_hline}\hlstd{(}\hlkwd{aes}\hlstd{(}\hlkwc{yintercept} \hlstd{=} \hlnum{0.25}\hlstd{),} \hlkwc{linetype} \hlstd{=} \hlstr{"dashed"}\hlstd{)} \hlopt{+}
+  \hlkwd{geom_vline}\hlstd{(}\hlkwd{aes}\hlstd{(}\hlkwc{xintercept} \hlstd{=} \hlnum{25}\hlstd{),} \hlkwc{linetype} \hlstd{=} \hlstr{"dashed"}\hlstd{)}
 \end{alltt}
 \end{kframe}\begin{figure}
-\includegraphics[width=\maxwidth]{figure/unnamed-chunk-10-1} \caption[Predicted influence of the bulk catch weight (low]{Predicted influence of the bulk catch weight (low: 26kg, medium: 61kg, high: 93kg) on the proportion of Nephrops catch retained per net. Null hypothesis of equal retention is displayed as the dashed line at 0.25. Minimum landing size of 25mm is shown as the vertical dashed line.}\label{fig:unnamed-chunk-10}
+\includegraphics[width=\maxwidth]{figure/unnamed-chunk-10-1} \caption[Predicted influence of the bulk catch weight (low]{Predicted influence of the bulk catch weight (low: 26kg, medium: 60.5kg, high: 120kg) on the proportion of Nephrops catch retained per net. Null hypothesis of equal retention is displayed as the dashed line at 0.25. Minimum landing size of 25mm is shown as the vertical dashed line.}\label{fig:unnamed-chunk-10}
 \end{figure}
 
 

@@ -337,10 +337,15 @@ AIC(mnom.length.bulk, mnom.length.bulk.inter)
 
 Get predictions for low, medium and high catch weights
 
-<<eval = TRUE, fig.allign = "center", fig.cap = "Predicted influence of the bulk catch weight (low: 26kg, medium: 61kg, high: 93kg) on the proportion of Nephrops catch retained per net. Null hypothesis of equal retention is displayed as the dashed line at 0.25. Minimum landing size of 25mm is shown as the vertical dashed line.", fig.width = 8, fig.height = 7>>=
+<<eval = TRUE, fig.allign = "center", fig.cap = "Predicted influence of the bulk catch weight (low: 26kg, medium: 60.5kg, high: 120kg) on the proportion of Nephrops catch retained per net. Null hypothesis of equal retention is displayed as the dashed line at 0.25. Minimum landing size of 25mm is shown as the vertical dashed line.", fig.width = 8, fig.height = 7>>=
 
 low.med.high.bulk <- quantile(weight.dat[weight.dat$Species == "Bulk",]$Total.Weight,
                               p = c(0.1, 0.5, 0.9))
+
+low.med.high.bulk
+
+## set high to 120kg
+low.med.high.bulk[3] <- 120
 
 pred.df <- expand.grid(Carapace.Length = pred.length,
                        Total.Weight = low.med.high.bulk)
@@ -359,18 +364,22 @@ mnom.pred.df <- data.frame(
                   proportion = c(mnom.pred))
 
 mnom.pred.df$Bulk.Weight <- 
-  ifelse(mnom.pred.df$Total.Weight == low.med.high.bulk[1], "Low",
-         ifelse(mnom.pred.df$Total.Weight == low.med.high.bulk[2], "Medium", "High")
+  ifelse(mnom.pred.df$Total.Weight == low.med.high.bulk[1], "Low (26kg)",
+         ifelse(mnom.pred.df$Total.Weight == low.med.high.bulk[2], "Medium (60.5kg)", "High (120kg)")
          )
 
+mnom.pred.df$Bulk.Weight <- factor(mnom.pred.df$Bulk.Weight, 
+                                   levels = c("Low (26kg)", "Medium (60.5kg)", "High (120kg)"))
 
 p + geom_line(data = mnom.pred.df, 
               aes(x = Carapace.Length*max.length, y = proportion, 
                   group = Bulk.Weight,
                   colour = Bulk.Weight)) +
-  geom_hline(aes(yintercept = 0.25), linetype = "dashed") +
-  geom_vline(aes(xintercept = 25), linetype = "dashed") +
-  scale_colour_brewer(palette="Set1")
+  scale_colour_manual(values=c("#619CFF", "#00BA38", "#FF0000")) +
+##scale_colour_manual(values = c("blue", "green", "red")) +
+geom_hline(aes(yintercept = 0.25), linetype = "dashed") +
+  geom_vline(aes(xintercept = 25), linetype = "dashed")
+
 @ 
 
 \bibliography{../../../../misc/epif_bibliography}
