@@ -107,4 +107,13 @@ coef(glm2)
 @ 
 Note that the weight effect is cancelled out. When there are component-specific influencing the probabilities of success, these should be included as separate variables, at least the way the data have been generated above. For the continuous weight data of the gear trials, we will include separate variables for the bulk-weight of each cod-end and the second order interactions as a first pass.
 
+<<>>=
+X <- matrix(1, 100)
+solve(t(X)%*%X)
+
+X <- matrix(1, 2)
+solve(t(X)%*%X)
+
+
+@ 
 \end{document}
