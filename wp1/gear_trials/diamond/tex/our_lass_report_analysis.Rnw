@@ -1,0 +1,386 @@
+%% knit("our_lass_report_analysis.Rnw")
+
+\documentclass[12pt]{article}
+\usepackage{times}
+\usepackage{hyperref}
+\usepackage{natbib}
+\hypersetup{pdfpagemode=UseNone} % don't show bookmarks on initial view
+\hypersetup{colorlinks, urlcolor={blue}}
+
+% revise margins
+\setlength{\headheight}{0.0in}
+\setlength{\topmargin}{0.0in}
+\setlength{\headsep}{0.0in}
+\setlength{\textheight}{8.65in}
+\setlength{\footskip}{0.35in}
+\setlength{\oddsidemargin}{0.0in}
+\setlength{\evensidemargin}{0.0in}
+\setlength{\textwidth}{6.5in}
+
+\setlength{\parskip}{6pt}
+\setlength{\parindent}{0pt}
+
+\title{\emph{Our Lass} 70mm versus 80mm analysis}
+\author{For discussion}
+\date{}
+
+\begin{document}
+
+<<echo=FALSE>>=
+library(knitr)
+opts_chunk$set(size="footnotesize")
+## set the working directory
+##setwd('../tex'); 
+@
+
+\maketitle
+
+\section{Data}
+
+Read the data in and make a few factor variables
+<<eval = TRUE>>=
+library(gdata)
+
+neph.dat <- read.xls("../data/2015 BIM Nephrops quad rig trials/Our Lass 2 70_80_90_100mm codends Irish Sea July 2015/Nephrops Raised Counts Our Lass 2 Irish Sea July 2015.xlsx",
+                     sheet = "All hauls",
+                     stringsAsFactors = FALSE)
+
+## subset containing the 70mm and 80mm data
+neph.7080 <- subset(neph.dat, Mesh.Size %in% c("70mm", "80mm"))
+
+## make factor haul variable
+neph.7080$fHAUL <- factor(paste("H", neph.7080$Haul.No, sep =""))
+
+## make a factor mesh size variable
+neph.7080$fMesh.Size <- factor(paste("mesh", neph.7080$Mesh.Size, sep = ""))
+
+## remove trailing dot from raised count column name
+names(neph.7080)[names(neph.7080) == "Raised.count."] <- "Raised.count"
+
+@ 
+
+Re-shape the data to wide format (columns for 70mm, 80mm variables).
+<<eval = TRUE>>=
+## get count per length bin per haul by mesh size
+## using the reshape package (makes it easier to process data)
+library(reshape)
+
+## variables to keep 
+vars2keep <- c("fHAUL", "fMesh.Size", "Net.position", "Carapace.length", 
+               "Count", "Raised.count", "Total.catch", "Overall.Sampling.Ratio")
+
+## melt the data frame
+neph.7080.melt <- melt(neph.7080[, vars2keep], 
+                           id = c("fHAUL", "fMesh.Size", "Carapace.length"))
+
+## re-form the dataframe in required format 
+neph.7080.cast <- cast(neph.7080.melt, Carapace.length + fHAUL ~ fMesh.Size  + variable)
+
+## first couple of lines
+head(neph.7080.cast, 2)
+
+summary(neph.7080.cast) ## note lots of NAs
+
+## fill in missing values 
+## these occur if there is a count for e.g. 20mm CL in 70mm but not in 80mm
+neph.7080.cast$mesh70mm_Count[is.na(neph.7080.cast$mesh70mm_Count)] <- 0
+neph.7080.cast$mesh70mm_Raised.count[is.na(neph.7080.cast$mesh70mm_Raised.count)] <- 0
+neph.7080.cast$mesh80mm_Count[is.na(neph.7080.cast$mesh80mm_Count)] <- 0
+neph.7080.cast$mesh80mm_Raised.count[is.na(neph.7080.cast$mesh80mm_Raised.count)] <- 0
+
+for(i in 1:dim(neph.7080.cast)[1]){
+  haul.dat <- subset(neph.7080.cast, fHAUL == neph.7080.cast$fHAUL[i])
+  ## 70mm net position
+  if(is.na(neph.7080.cast$mesh70mm_Net.position[i])){
+    neph.7080.cast$mesh70mm_Net.position[i] <-
+      unique(na.omit(haul.dat$mesh70mm_Net.position))
+  }
+  ## 80mm net position
+  if(is.na(neph.7080.cast$mesh80mm_Net.position[i])){
+    neph.7080.cast$mesh80mm_Net.position[i] <-
+      unique(na.omit(haul.dat$mesh80mm_Net.position))
+  }
+  ## 70mm total catch
+  if(is.na(neph.7080.cast$mesh70mm_Total.catch[i])){
+    neph.7080.cast$mesh70mm_Total.catch[i] <-
+      unique(na.omit(haul.dat$mesh70mm_Total.catch))
+  }
+  ## 80mm total catch
+  if(is.na(neph.7080.cast$mesh80mm_Total.catch[i])){
+    neph.7080.cast$mesh80mm_Total.catch[i] <-
+      unique(na.omit(haul.dat$mesh80mm_Total.catch))
+  }
+  ## Sampling ratio
+  ## 70mm total catch
+  if(is.na(neph.7080.cast$mesh70mm_Overall.Sampling.Ratio[i])){
+    neph.7080.cast$mesh70mm_Overall.Sampling.Ratio[i] <-
+      unique(na.omit(haul.dat$mesh70mm_Overall.Sampling.Ratio))
+  }
+  ## 80mm total catch
+  if(is.na(neph.7080.cast$mesh80mm_Overall.Sampling.Ratio[i])){
+    neph.7080.cast$mesh80mm_Overall.Sampling.Ratio[i] <-
+      unique(na.omit(haul.dat$mesh80mm_Overall.Sampling.Ratio))
+  }
+}
+
+summary(neph.7080.cast) ## no missing
+
+@ 
+
+Get the empirical proportion 80/(70 + 80) at length. Note that the length-specific CIs do not reflect the non-independence of the observations across lengths at the haul level are therefore not plotted. 
+<<>>=
+## vector of carapace lengths
+cl.vec <- unique(neph.7080.cast$Carapace.length)
+cl.vec <- cl.vec[order(cl.vec)]
+
+count.df <- data.frame(Carapace.length = cl.vec, prop.80 = NA)
+
+for(i in 1:dim(count.df)[1]){
+  sub.dat <- subset(neph.7080.cast, Carapace.length == count.df$Carapace.length[i])
+  ##
+  if(dim(sub.dat)[1] > 1){
+    ##
+    count.df$prop.80[i] <- with(sub.dat, round(sum(mesh80mm_Raised.count)) / 
+                                (round(sum(mesh80mm_Raised.count)) + round(sum(mesh70mm_Raised.count))))
+    rm(list = c("sub.dat"))
+  }
+}
+
+@ 
+
+Plot the data (Figure~\ref{fig:rawprops})
+<<rawprops, eval = TRUE, fig.allign = "center", fig.cap = "Proportion of Nephrops raised numbers retained in the 80mm over the sum of the 80mm and 70mm meshes.", fig.width = 6, fig.height = 5>>=
+
+with(count.df, plot(Carapace.length, prop.80, ylim = c(0, 1), pch = 19,
+                    xlab = "Carapace length (mm)", 
+                    ylab = "Proportion (N80mm/(N70mm + N80mm))",
+                    bty = "L"))
+abline(h = 0.5, lty = 2)
+
+@
+
+\section{Models}
+A catch comparison binomial Generalized Additive/Linear Mixed Model is suitable choice for these count data where we are interested in estimating how the proportion changes with carapace length. We first try a model with only carapace length as an explanatory variable with haul random effects.
+
+<<>>=
+library(mgcv)
+
+neph.7080.cast$dum <- 1
+
+## no length effect
+gamm.null <- gam(cbind(mesh80mm_Count, mesh70mm_Count) ~ 1 +
+                 s(fHAUL, bs="re", by = dum),
+                 offset = 
+                 log(mesh80mm_Overall.Sampling.Ratio / 
+                     mesh70mm_Overall.Sampling.Ratio),
+                 family = binomial,
+                 data = neph.7080.cast)
+
+gamm.alt <- gam(cbind(mesh80mm_Count, mesh70mm_Count) ~ 
+                s(Carapace.length, k = 5) +
+                s(fHAUL, bs="re", by = dum),
+                offset = 
+                log(mesh80mm_Overall.Sampling.Ratio / 
+                    mesh70mm_Overall.Sampling.Ratio),
+                family = binomial,
+                data = neph.7080.cast)
+
+## likelihood ratio test for the significance of carapace length
+anova(gamm.null, gamm.alt, test = "Chisq")
+
+@ 
+
+Plot the predictions from this model.
+
+<<glmmsimple, eval = TRUE, fig.allign = "center", fig.cap = "Predicted proportion from binomial GLMM without covariates.", fig.width = 6, fig.height = 5>>=
+
+mean.catch <- mean(c(unique(neph.7080.cast$mesh70mm_Total.catch),
+                     unique(neph.7080.cast$mesh80mm_Total.catch)))
+
+## data frame to predictfor
+pred.df <- data.frame(Carapace.length = cl.vec,
+                      fHAUL = "H1",
+                      dum = 0,
+                      mesh80mm_Overall.Sampling.Ratio = 1,
+                      mesh70mm_Overall.Sampling.Ratio = 1,
+                      mesh70mm_Total.catch = mean.catch,
+                      mesh80mm_Total.catch = mean.catch
+                      )
+
+pred.gamm.alt <- predict(gamm.alt, newdata = pred.df, se.fit = TRUE)
+
+## predicted proportions and confidence intervals
+pred.df$pred.prop <- plogis(pred.gamm.alt$fit)
+pred.df$lwr.prop <- plogis(pred.gamm.alt$fit - qnorm(0.975) * pred.gamm.alt$se.fit)
+pred.df$upr.prop <- plogis(pred.gamm.alt$fit + qnorm(0.975) * pred.gamm.alt$se.fit)
+
+
+with(count.df, plot(Carapace.length, prop.80, ylim = c(0, 1), pch = 19,
+                    xlab = "Carapace length (mm)", 
+                    ylab = "Proportion (N80mm/(N70mm + N80mm))",
+                    bty = "L"))
+
+with(pred.df, lines(Carapace.length, pred.prop))
+with(pred.df, lines(Carapace.length, lwr.prop, lty = 2))
+with(pred.df, lines(Carapace.length, upr.prop, lty = 2))
+abline(h = 0.5, col = "slategrey")
+@ 
+
+The cause of the wide confidence intervals (Figure ~ \ref{fig:glmmsimple}) is the large amount of inter-haul variability in the proportion retained in the 80mm (Figure~\ref{fig:haulprop})
+
+<<haulprop, eval = TRUE, fig.allign = "center", fig.cap = "Observed proportion in the 80mm by haul. Note the wide variability of the proportion with some having much higher or lower proportions. Fitted lines come from the GLMM with carapace length only.", fig.width = 6, fig.height = 5>>=
+
+## Get the proportion at length by haul
+haul.count.df <- expand.grid(Carapace.length = cl.vec, 
+                             fHAUL = unique(neph.7080.cast$fHAUL))
+
+## order the levels
+haul.count.df$fHAUL <- factor(as.character(haul.count.df$fHAUL), 
+                              levels = c(paste("H", 1:12, sep = ""), "H14"))
+                            
+haul.count.df$prop.80 <- NA
+haul.count.df$lwr <- NA
+haul.count.df$upr <- NA
+
+for(i in 1:dim(haul.count.df)[1]){
+  sub.dat <- subset(neph.7080.cast, 
+                    Carapace.length == haul.count.df$Carapace.length[i] & 
+                    fHAUL == haul.count.df$fHAUL[i])
+  ##
+  ##if((sub.dat$mesh80mm_Raised.count + sub.dat$mesh70mm_Raised.count) > 0){
+  if(dim(sub.dat)[1] > 0){
+    btest <- with(sub.dat, 
+                  binom.test(x = round(mesh80mm_Raised.count),
+                             n = round(mesh80mm_Raised.count + mesh70mm_Raised.count)))
+    ##
+    haul.count.df$prop.80[i] <- btest$estimate
+    haul.count.df$lwr[i] <- btest$conf.int[1]
+    haul.count.df$upr[i] <- btest$conf.int[2]
+    ##
+    rm(list = c("sub.dat", "btest"))
+  }
+}
+
+## get predictions at the HAUL level from model
+haul.count.df$dum <- 1
+haul.count.df$pred.prop <- plogis(predict(gamm.alt, newdata = haul.count.df))
+
+
+library(ggplot2)
+
+blue2red <- colorRampPalette(c("darkblue", "white", "red"))
+
+ggplot(haul.count.df, aes(x = Carapace.length, y = prop.80)) +
+  geom_point(aes(colour = fHAUL)) + 
+  geom_line(data = haul.count.df, aes(x = Carapace.length, y = pred.prop,  colour = fHAUL)) +
+  scale_colour_manual(values = blue2red(13)) + ylab("Proportion in 80mm")
+
+@ 
+
+We can take a look at additional measured covariates to see if these relate to the haul-level variability (random effects in the model above) (Figure~\ref{fig:ranefplots}).
+
+<<ranefplots, eval = TRUE, fig.allign = "center", fig.cap = "Relationship between the random effects of the carapace length only model and measured covariates .", fig.width = 6, fig.height = 5, warnings = FALSE>>=
+##
+ranef.df <- data.frame(fHAUL = levels(neph.7080.cast$fHAUL),
+                       ranef = coef(gamm.alt)[-c(1:5)])
+##
+covar.names <- c("fHAUL", "mesh70mm_Net.position", "mesh70mm_Total.catch", 
+                 "mesh80mm_Net.position", "mesh80mm_Total.catch")
+##
+covar.df <- unique(neph.7080.cast[, covar.names])
+##
+ranef.df <- merge(ranef.df, covar.df)
+## convert to long format for plotting
+ranef.df <- melt(ranef.df, id = c("fHAUL", "ranef"))
+##
+ggplot(ranef.df, aes(x = value, y = ranef)) + 
+  geom_point() + 
+  facet_wrap(~ variable, scales = "free") +
+  xlab("Covariate value") +
+  ylab("Random effect")
+
+@
+
+There are some strong relationships between the random effects and measured covariates (Figure~\ref{fig:ranefplots}). It is best to include these measured variables in the model as fixed effects.
+
+<<>>=
+## including additional covariates
+## check identifiability
+neph.7080.cast$fmesh80mm_Net.position <- 
+  factor(paste("pos", 
+               neph.7080.cast$mesh80mm_Net.position, sep = ""))
+
+## using log of total catch weights - return to this
+neph.7080.cast$log.mesh80mm_Total.catch <- log(neph.7080.cast$mesh80mm_Total.catch)
+neph.7080.cast$log.mesh70mm_Total.catch <- log(neph.7080.cast$mesh70mm_Total.catch)
+
+## Note should return to this warning later
+## fits okay in gam but glmm used for effects package
+glmm.alt.covar <- glmer(cbind(mesh80mm_Count, mesh70mm_Count) ~ 
+                        ##I(log(mesh80mm_Total.catch / mesh70mm_Total.catch)) * Carapace.length +
+                        log.mesh80mm_Total.catch + log.mesh70mm_Total.catch + 
+                        Carapace.length +
+                        fmesh80mm_Net.position +
+                        (1 | fHAUL),
+                        offset = 
+                        log(mesh80mm_Overall.Sampling.Ratio / 
+                            mesh70mm_Overall.Sampling.Ratio),
+                        family = binomial,
+                        data = neph.7080.cast)
+
+## use effects package to get prediction for model with net position
+## set predictor variables
+xlevels <- list(Carapace.length = cl.vec
+                ##mesh80mm_Total.catch = mean.catch,
+                ##mesh70mm_Total.catch = mean.catch
+                )
+## if we wanted to set the proportions of net positions equivalent
+## otherwise set to the proportion observed in the data
+##given.values <- c("fmesh80mm_Net.positionpos2" = 1/4,
+##                  "fmesh80mm_Net.positionpos3" = 1/4,
+##                  "fmesh80mm_Net.positionpos4" = 1/4
+##                  )
+
+##cl.effect <- effect("Carapace.length", glmm.alt.covar, xlevels = xlevels, offset = 0, given.values = given.values)
+cl.effect <- effect("Carapace.length", glmm.alt.covar, xlevels = xlevels, offset = 0)
+
+@ 
+
+Finally plot the effect of carapace length with the other variables set to their mean in the data (Figure~\ref{fig:glmmcovar}).
+
+<<glmmcovar, eval = TRUE, fig.allign = "center", fig.cap = "Predicted proportion from binomial GLMM with covariates. Note in the predictions the bulk weights are set to their mean and the net positions to their proportional occurence in the data.", fig.width = 6, fig.height = 5, warnings = FALSE>>=
+
+with(count.df, plot(Carapace.length, prop.80, ylim = c(0, 1), pch = 19,
+                    xlab = "Carapace length (mm)", 
+                    ylab = "Proportion (N80mm/(N70mm + N80mm))",
+                    bty = "L"))
+
+## effects prediction
+lines(cl.vec, plogis(cl.effect$fit[, 1]))
+lines(cl.vec, plogis(cl.effect$lower[, 1]), lty = 2)
+lines(cl.vec, plogis(cl.effect$upper[, 1]), lty = 2)
+abline(h = 0.5, col = "slategrey")
+
+@ 
+
+Finally test length effect in covariate model
+<<>>=
+glmm.alt.covar.nolength <- glmer(cbind(mesh80mm_Count, mesh70mm_Count) ~ 
+                        log.mesh80mm_Total.catch + log.mesh70mm_Total.catch + 
+                        fmesh80mm_Net.position +
+                        (1 | fHAUL),
+                        offset = 
+                        log(mesh80mm_Overall.Sampling.Ratio / 
+                            mesh70mm_Overall.Sampling.Ratio),
+                        family = binomial,
+                        data = neph.7080.cast)
+
+## likelihood ratio test
+anova(glmm.alt.covar.nolength, glmm.alt.covar)
+## significant effect of carapace length
+@ 
+
+\bibliography{../../../../misc/epif_bibliography}
+\bibliographystyle{../../../../misc/cjfas}
+\end{document}
+

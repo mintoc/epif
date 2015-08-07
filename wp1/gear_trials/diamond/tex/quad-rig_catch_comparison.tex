@@ -1,4 +1,4 @@
-%% knit("diamond_neph_lfreq_model.Rnw")
+%% knit("quad-rig_catch_comparison.Rnw")
 
 \documentclass[12pt]{article}\usepackage[]{graphicx}\usepackage[]{color}
 %% maxwidth is the original width if it is less than linewidth
@@ -70,7 +70,7 @@
 \setlength{\parindent}{0pt}
 
 \title{A preliminary model for Quad-Rig catch comparison}
-\author{For discussion only}
+\author{Updated to include additional trial data}
 \date{}
 \IfFileExists{upquote.sty}{\usepackage{upquote}}{}
 \begin{document}
@@ -254,15 +254,15 @@ The model we focus on is the multinomial, which is a generalization of the binom
 \hlcom{## include carapace length }
 \hlcom{## first scale it to range between zero and one}
 \hlstd{max.length} \hlkwb{<-} \hlkwd{max}\hlstd{(neph.cast}\hlopt{$}\hlstd{Carapace.Length)}
-\hlstd{neph.cast}\hlopt{$}\hlstd{Carapace.Length} \hlkwb{<-} \hlstd{neph.cast}\hlopt{$}\hlstd{Carapace.Length}\hlopt{/}\hlstd{max.length}
+\hlstd{neph.cast}\hlopt{$}\hlstd{prop.Carapace.Length} \hlkwb{<-} \hlstd{neph.cast}\hlopt{$}\hlstd{Carapace.Length}\hlopt{/}\hlstd{max.length}
 
 \hlcom{## Extend to third order polynomial (based on AIC and BIC)}
-\hlstd{neph.cast}\hlopt{$}\hlstd{Carapace.Length2} \hlkwb{<-} \hlstd{neph.cast}\hlopt{$}\hlstd{Carapace.Length}\hlopt{^}\hlnum{2}
-\hlstd{neph.cast}\hlopt{$}\hlstd{Carapace.Length3} \hlkwb{<-} \hlstd{neph.cast}\hlopt{$}\hlstd{Carapace.Length}\hlopt{^}\hlnum{3}
+\hlstd{neph.cast}\hlopt{$}\hlstd{prop.Carapace.Length2} \hlkwb{<-} \hlstd{neph.cast}\hlopt{$}\hlstd{prop.Carapace.Length}\hlopt{^}\hlnum{2}
+\hlstd{neph.cast}\hlopt{$}\hlstd{prop.Carapace.Length3} \hlkwb{<-} \hlstd{neph.cast}\hlopt{$}\hlstd{prop.Carapace.Length}\hlopt{^}\hlnum{3}
 
 \hlcom{## }
 \hlstd{mnom.length} \hlkwb{<-} \hlkwd{multinom}\hlstd{(neph.count.mat} \hlopt{~}
-                        \hlstd{Carapace.Length} \hlopt{+} \hlstd{Carapace.Length2} \hlopt{+} \hlstd{Carapace.Length3} \hlopt{+}
+                        \hlstd{prop.Carapace.Length} \hlopt{+} \hlstd{prop.Carapace.Length2} \hlopt{+} \hlstd{prop.Carapace.Length3} \hlopt{+}
                         \hlkwd{offset}\hlstd{(offset.mat),} \hlkwc{data} \hlstd{= neph.cast)}
 \end{alltt}
 \begin{verbatim}
@@ -300,11 +300,14 @@ Get predictions for the fitted model (note this is long-winded here but will be 
 
 \hlcom{## number of lengths to predict for}
 \hlstd{nlength} \hlkwb{<-} \hlnum{100}
+\hlstd{pred.prop.length} \hlkwb{<-} \hlkwd{seq}\hlstd{(}\hlkwd{min}\hlstd{(neph.cast}\hlopt{$}\hlstd{prop.Carapace.Length),}
+                        \hlkwd{max}\hlstd{(neph.cast}\hlopt{$}\hlstd{prop.Carapace.Length),} \hlkwc{length} \hlstd{=} \hlnum{100}\hlstd{)}
+
 \hlstd{pred.length} \hlkwb{<-} \hlkwd{seq}\hlstd{(}\hlkwd{min}\hlstd{(neph.cast}\hlopt{$}\hlstd{Carapace.Length),}
-                   \hlkwd{max}\hlstd{(neph.cast}\hlopt{$}\hlstd{Carapace.Length),} \hlkwc{length} \hlstd{=} \hlnum{100}\hlstd{)}
+                        \hlkwd{max}\hlstd{(neph.cast}\hlopt{$}\hlstd{Carapace.Length),} \hlkwc{length} \hlstd{=} \hlnum{100}\hlstd{)}
 
 \hlcom{## model matrix}
-\hlstd{X} \hlkwb{<-} \hlkwd{cbind}\hlstd{(}\hlnum{1}\hlstd{, pred.length, pred.length}\hlopt{^}\hlnum{2}\hlstd{, pred.length}\hlopt{^}\hlnum{3}\hlstd{)}
+\hlstd{X} \hlkwb{<-} \hlkwd{cbind}\hlstd{(}\hlnum{1}\hlstd{, pred.prop.length, pred.prop.length}\hlopt{^}\hlnum{2}\hlstd{, pred.prop.length}\hlopt{^}\hlnum{3}\hlstd{)}
 
 \hlcom{## number of times to resample predictions to get CIs}
 \hlstd{nresamp} \hlkwb{<-} \hlnum{100}
@@ -339,12 +342,12 @@ Get predictions for the fitted model (note this is long-winded here but will be 
 \hlstd{m} \hlkwb{<-} \hlkwd{dim}\hlstd{(pred.mu)[}\hlnum{1}\hlstd{]}
 
 \hlstd{pred.ci.df} \hlkwb{<-} \hlkwd{data.frame}\hlstd{(}
-               \hlkwc{Mesh.Size} \hlstd{=} \hlkwd{factor}\hlstd{(}\hlkwd{rep}\hlstd{(}\hlkwd{c}\hlstd{(}\hlstr{"70mm"}\hlstd{,} \hlstr{"80mm"}\hlstd{,} \hlstr{"90mm"}\hlstd{,} \hlstr{"100mm"}\hlstd{),}
+                \hlkwc{Mesh.Size} \hlstd{=} \hlkwd{factor}\hlstd{(}\hlkwd{rep}\hlstd{(}\hlkwd{c}\hlstd{(}\hlstr{"70mm"}\hlstd{,} \hlstr{"80mm"}\hlstd{,} \hlstr{"90mm"}\hlstd{,} \hlstr{"100mm"}\hlstd{),}
                  \hlkwc{each} \hlstd{= m),} \hlkwc{levels} \hlstd{=} \hlkwd{c}\hlstd{(}\hlstr{"70mm"}\hlstd{,} \hlstr{"80mm"}\hlstd{,} \hlstr{"90mm"}\hlstd{,} \hlstr{"100mm"}\hlstd{)),}
-               \hlkwc{Carapace.Length} \hlstd{=} \hlkwd{rep}\hlstd{(pred.length} \hlopt{*} \hlstd{max.length,} \hlkwc{times} \hlstd{=} \hlnum{4}\hlstd{),}
-               \hlkwc{proportion} \hlstd{=} \hlkwd{c}\hlstd{(pred.mu),}
-               \hlkwc{lower} \hlstd{=} \hlkwd{c}\hlstd{(pred.lower),}
-               \hlkwc{upper} \hlstd{=} \hlkwd{c}\hlstd{(pred.upper))}
+                \hlkwc{Carapace.Length} \hlstd{=} \hlkwd{rep}\hlstd{(pred.length,} \hlkwc{times} \hlstd{=} \hlnum{4}\hlstd{),}
+                \hlkwc{proportion} \hlstd{=} \hlkwd{c}\hlstd{(pred.mu),}
+                \hlkwc{lower} \hlstd{=} \hlkwd{c}\hlstd{(pred.lower),}
+                \hlkwc{upper} \hlstd{=} \hlkwd{c}\hlstd{(pred.upper))}
 \end{alltt}
 \end{kframe}
 \end{knitrout}
@@ -384,7 +387,7 @@ Make a row per observation and merge with the weight data
 \hlcom{##                          round(neph.dat$COUNT/neph.dat$SUBSRATIO, 0)), ]}
 
 \hlcom{## Note: no raising here}
-\hlstd{neph.dat2} \hlkwb{<-} \hlstd{neph.dat[}\hlkwd{rep}\hlstd{(}\hlnum{1}\hlopt{:}\hlstd{n,} \hlkwc{times} \hlstd{= neph.dat}\hlopt{$}\hlstd{COUNT), ]}
+\hlcom{##neph.dat2 <- neph.dat[rep(1:n, times = neph.dat$COUNT), ]}
 
 \hlstd{weight.dat} \hlkwb{<-} \hlkwd{read.xls}\hlstd{(}\hlstr{"../data/Celtic Warrior Diamond mesh July 2014 Celtic Sea.xls"}\hlstd{,}
                        \hlkwc{sheet} \hlstd{=} \hlstr{"Weights"}\hlstd{,}
@@ -408,16 +411,46 @@ Make a row per observation and merge with the weight data
 \hlcom{## re-name total weight column}
 \hlkwd{names}\hlstd{(weight.dat)[}\hlkwd{names}\hlstd{(weight.dat)} \hlopt{==} \hlstr{"Total.weight..kg."}\hlstd{]} \hlkwb{<-} \hlstr{"Total.Weight"}
 
+\hlstd{weight.dat} \hlkwb{<-} \hlkwd{subset}\hlstd{(weight.dat, Species} \hlopt{==} \hlstr{"Bulk"}\hlstd{)}
+
+
+\hlcom{## melt the data frame}
+\hlstd{weight.melt} \hlkwb{<-} \hlkwd{melt}\hlstd{(weight.dat[,} \hlkwd{c}\hlstd{(}\hlstr{"HAUL"}\hlstd{,} \hlstr{"Mesh.Size"}\hlstd{,} \hlstr{"Total.Weight"}\hlstd{)],}
+                  \hlkwc{id} \hlstd{=} \hlkwd{c}\hlstd{(}\hlstr{"Mesh.Size"}\hlstd{,} \hlstr{"HAUL"}\hlstd{))}
+
+\hlcom{## re-form the dataframe in required format }
+\hlstd{weight.cast} \hlkwb{<-} \hlkwd{cast}\hlstd{(weight.melt, HAUL} \hlopt{~} \hlstd{Mesh.Size}  \hlopt{+} \hlstd{variable)}
+\hlstd{weight.cast} \hlkwb{<-} \hlstd{weight.cast[}\hlkwd{order}\hlstd{(weight.cast}\hlopt{$}\hlstd{HAUL), ]}
+\hlstd{weight.cast[}\hlkwd{is.na}\hlstd{(weight.cast)]} \hlkwb{<-} \hlnum{0}
+
+\hlcom{## show the first few rows}
+\hlkwd{head}\hlstd{(weight.cast,} \hlnum{2}\hlstd{)}
+\end{alltt}
+\begin{verbatim}
+##   HAUL 100mm_Total.Weight 70mm_Total.Weight 80mm_Total.Weight
+## 1   H1              29.64             26.76             22.56
+## 2  H10              52.00             50.40             60.10
+##   90mm_Total.Weight
+## 1             26.28
+## 2             47.50
+\end{verbatim}
+\begin{alltt}
+\hlstd{weight.cast}\hlopt{$}\hlstd{fHAUL} \hlkwb{<-} \hlkwd{factor}\hlstd{(weight.cast}\hlopt{$}\hlstd{HAUL)}
+
+\hlkwd{names}\hlstd{(weight.cast)[}\hlkwd{grep}\hlstd{(}\hlstr{"^[0-9]"}\hlstd{,} \hlkwd{names}\hlstd{(weight.cast))]} \hlkwb{<-} \hlkwd{paste}\hlstd{(}\hlstr{"mesh."}\hlstd{,} \hlkwd{names}\hlstd{(weight.cast)[}\hlkwd{grep}\hlstd{(}\hlstr{"^[0-9]"}\hlstd{,} \hlkwd{names}\hlstd{(weight.cast))],} \hlkwc{sep} \hlstd{=} \hlstr{""}\hlstd{)}
+
 \hlcom{## merge nephrops length and total bulk weight data}
-\hlstd{neph.dat3} \hlkwb{<-} \hlkwd{merge}\hlstd{(neph.dat2,}
-                   \hlkwd{subset}\hlstd{(weight.dat, Species} \hlopt{==} \hlstr{"Bulk"}\hlstd{)[,} \hlkwd{c}\hlstd{(}\hlstr{"Mesh.Size"}\hlstd{,} \hlstr{"HAUL"}\hlstd{,}
-                                        \hlstr{"Total.Weight"}\hlstd{)],}
-                   \hlkwc{by} \hlstd{=} \hlkwd{c}\hlstd{(}\hlstr{"Mesh.Size"}\hlstd{,} \hlstr{"HAUL"}\hlstd{))}
+\hlstd{neph.dat3} \hlkwb{<-} \hlkwd{merge}\hlstd{(neph.cast,}
+                   \hlstd{weight.cast,}
+                   \hlkwc{by} \hlstd{=} \hlkwd{c}\hlstd{(}\hlstr{"fHAUL"}\hlstd{),}
+                   \hlkwc{sort} \hlstd{=} \hlnum{FALSE}
+                   \hlstd{)}
 
 \hlstd{max.length} \hlkwb{<-} \hlkwd{max}\hlstd{(neph.dat3}\hlopt{$}\hlstd{Carapace.Length)}
-\hlstd{neph.dat3}\hlopt{$}\hlstd{Carapace.Length} \hlkwb{<-} \hlstd{neph.dat3}\hlopt{$}\hlstd{Carapace.Length}\hlopt{/}\hlstd{max.length}
-\hlstd{neph.dat3}\hlopt{$}\hlstd{Carapace.Length2} \hlkwb{<-} \hlstd{neph.dat3}\hlopt{$}\hlstd{Carapace.Length}\hlopt{^}\hlnum{2}
-\hlstd{neph.dat3}\hlopt{$}\hlstd{Carapace.Length3} \hlkwb{<-} \hlstd{neph.dat3}\hlopt{$}\hlstd{Carapace.Length}\hlopt{^}\hlnum{3}
+\hlstd{neph.dat3}\hlopt{$}\hlstd{prop.Carapace.Length} \hlkwb{<-} \hlstd{neph.dat3}\hlopt{$}\hlstd{Carapace.Length}\hlopt{/}\hlstd{max.length}
+\hlstd{neph.dat3}\hlopt{$}\hlstd{prop.Carapace.Length2} \hlkwb{<-} \hlstd{neph.dat3}\hlopt{$}\hlstd{prop.Carapace.Length}\hlopt{^}\hlnum{2}
+\hlstd{neph.dat3}\hlopt{$}\hlstd{prop.Carapace.Length3} \hlkwb{<-} \hlstd{neph.dat3}\hlopt{$}\hlstd{prop.Carapace.Length}\hlopt{^}\hlnum{3}
+\hlstd{neph.dat3}\hlopt{$}\hlstd{prop.Carapace.Length4} \hlkwb{<-} \hlstd{neph.dat3}\hlopt{$}\hlstd{prop.Carapace.Length}\hlopt{^}\hlnum{4}
 \end{alltt}
 \end{kframe}
 \end{knitrout}
@@ -428,101 +461,143 @@ Include weight in the fit
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
 \hlcom{## compare two ways of writing same model}
-\hlcom{## in matrix format, as before except without offset for the moment}
-\hlstd{mnom.length.matrix} \hlkwb{<-} \hlkwd{multinom}\hlstd{(neph.count.mat} \hlopt{~}
-                               \hlstd{Carapace.Length} \hlopt{+}
-                               \hlstd{Carapace.Length2} \hlopt{+}
-                               \hlstd{Carapace.Length3,} \hlkwc{data} \hlstd{= neph.cast)}
-\end{alltt}
-\begin{verbatim}
-## # weights:  20 (12 variable)
-## initial  value 65846.209564 
-## iter  10 value 65594.036234
-## iter  20 value 65560.638668
-## final  value 65558.314009 
-## converged
-\end{verbatim}
-\begin{alltt}
-\hlcom{## in long format (row per measurement)}
-\hlstd{mnom.length.long} \hlkwb{<-} \hlkwd{multinom}\hlstd{(fMesh.Size} \hlopt{~}
-                             \hlstd{Carapace.Length} \hlopt{+}
-                             \hlstd{Carapace.Length2} \hlopt{+}
-                             \hlstd{Carapace.Length3,} \hlkwc{data} \hlstd{= neph.dat3)}
-\end{alltt}
-\begin{verbatim}
-## # weights:  20 (12 variable)
-## initial  value 65846.209564 
-## iter  10 value 65594.036234
-## iter  20 value 65560.638668
-## final  value 65558.314009 
-## converged
-\end{verbatim}
-\begin{alltt}
-\hlkwd{AIC}\hlstd{(mnom.length.matrix, mnom.length.long)}
-\end{alltt}
-\begin{verbatim}
-##                    df      AIC
-## mnom.length.matrix 12 131140.6
-## mnom.length.long   12 131140.6
-\end{verbatim}
-\begin{alltt}
-\hlcom{## Same model, now include bulk weight in long format model }
-\hlcom{## in addition to carapace polynomials}
 
-\hlstd{mnom.length.bulk} \hlkwb{<-} \hlkwd{multinom}\hlstd{(fMesh.Size} \hlopt{~}
-                             \hlstd{Carapace.Length} \hlopt{+}
-                             \hlstd{Carapace.Length2} \hlopt{+}
-                             \hlstd{Carapace.Length3} \hlopt{+} \hlstd{Total.Weight,} \hlkwc{data} \hlstd{= neph.dat3)}
+\hlcom{## in matrix format, as before except without offset for the moment}
+\hlstd{mnom.length.matrix} \hlkwb{<-} \hlkwd{multinom}\hlstd{(}\hlkwd{as.matrix}\hlstd{(neph.dat3[,} \hlkwd{c}\hlstd{(}\hlstr{"70mm_COUNT"}\hlstd{,} \hlstr{"80mm_COUNT"}\hlstd{,} \hlstr{"90mm_COUNT"}\hlstd{,} \hlstr{"100mm_COUNT"}\hlstd{)])} \hlopt{~}
+                               \hlstd{prop.Carapace.Length} \hlopt{+}
+                               \hlstd{prop.Carapace.Length2} \hlopt{+}
+                               \hlstd{prop.Carapace.Length3,}
+                               \hlcom{##offset(offset.mat), }
+                               \hlkwc{data} \hlstd{= neph.dat3)}
 \end{alltt}
 \begin{verbatim}
-## # weights:  24 (15 variable)
+## # weights:  20 (12 variable)
 ## initial  value 65846.209564 
-## iter  10 value 65467.670510
-## iter  20 value 65392.143368
-## iter  30 value 65389.022743
-## iter  30 value 65389.022490
-## iter  30 value 65389.022490
-## final  value 65389.022490 
+## iter  10 value 65594.036234
+## iter  20 value 65560.638668
+## final  value 65558.314009 
 ## converged
 \end{verbatim}
 \begin{alltt}
-\hlkwd{AIC}\hlstd{(mnom.length.long, mnom.length.bulk)}
+\hlcom{## take a look at the residuals by bulk weight}
+\hlkwd{plot}\hlstd{(neph.dat3[,} \hlkwd{c}\hlstd{(}\hlstr{"mesh.70mm_Total.Weight"}\hlstd{,} \hlstr{"mesh.80mm_Total.Weight"}\hlstd{,} \hlstr{"mesh.90mm_Total.Weight"}\hlstd{,} \hlstr{"mesh.100mm_Total.Weight"}\hlstd{)])}
+\end{alltt}
+\end{kframe}
+\includegraphics[width=\maxwidth]{figure/unnamed-chunk-9-1} 
+\begin{kframe}\begin{alltt}
+\hlcom{## very strong correlation in the counts}
+\hlkwd{round}\hlstd{(}\hlkwd{cor}\hlstd{(neph.dat3[,} \hlkwd{c}\hlstd{(}\hlstr{"mesh.70mm_Total.Weight"}\hlstd{,} \hlstr{"mesh.80mm_Total.Weight"}\hlstd{,} \hlstr{"mesh.90mm_Total.Weight"}\hlstd{,} \hlstr{"mesh.100mm_Total.Weight"}\hlstd{)]),} \hlnum{3}\hlstd{)}
 \end{alltt}
 \begin{verbatim}
-##                  df      AIC
-## mnom.length.long 12 131140.6
-## mnom.length.bulk 15 130808.0
+##                         mesh.70mm_Total.Weight mesh.80mm_Total.Weight
+## mesh.70mm_Total.Weight                   1.000                  0.953
+## mesh.80mm_Total.Weight                   0.953                  1.000
+## mesh.90mm_Total.Weight                   0.927                  0.951
+## mesh.100mm_Total.Weight                  0.882                  0.948
+##                         mesh.90mm_Total.Weight mesh.100mm_Total.Weight
+## mesh.70mm_Total.Weight                   0.927                   0.882
+## mesh.80mm_Total.Weight                   0.951                   0.948
+## mesh.90mm_Total.Weight                   1.000                   0.927
+## mesh.100mm_Total.Weight                  0.927                   1.000
 \end{verbatim}
 \begin{alltt}
-\hlcom{## interaction between length and bulk}
-\hlstd{mnom.length.bulk.inter} \hlkwb{<-} \hlkwd{multinom}\hlstd{(fMesh.Size} \hlopt{~}
-                                   \hlstd{Carapace.Length} \hlopt{+}
-                                   \hlstd{Carapace.Length2} \hlopt{+}
-                                   \hlstd{Carapace.Length3} \hlopt{+}
-                                   \hlstd{Total.Weight} \hlopt{+}
-                                   \hlstd{Carapace.Length}\hlopt{:}\hlstd{Total.Weight} \hlopt{+}
-                                   \hlstd{Carapace.Length2}\hlopt{:}\hlstd{Total.Weight} \hlopt{+}
-                                   \hlstd{Carapace.Length3}\hlopt{:}\hlstd{Total.Weight}
-                                   \hlstd{,} \hlkwc{data} \hlstd{= neph.dat3)}
+\hlcom{## resids versus weights}
+\hlkwd{qplot}\hlstd{(neph.dat3[,} \hlkwd{c}\hlstd{(}\hlstr{"mesh.70mm_Total.Weight"}\hlstd{)],} \hlkwd{resid}\hlstd{(mnom.length.matrix)[,}\hlnum{1}\hlstd{])} \hlopt{+} \hlkwd{geom_smooth}\hlstd{()}
+\end{alltt}
+
+
+{\ttfamily\noindent\itshape\color{messagecolor}{\#\# geom\_smooth: method="{}auto"{} and size of largest group is <1000, so using loess. Use 'method = x' to change the smoothing method.}}\end{kframe}
+\includegraphics[width=\maxwidth]{figure/unnamed-chunk-9-2} 
+\begin{kframe}\begin{alltt}
+\hlkwd{qplot}\hlstd{(neph.dat3[,} \hlkwd{c}\hlstd{(}\hlstr{"mesh.80mm_Total.Weight"}\hlstd{)],} \hlkwd{resid}\hlstd{(mnom.length.matrix)[,}\hlnum{2}\hlstd{])} \hlopt{+} \hlkwd{geom_smooth}\hlstd{()}
+\end{alltt}
+
+
+{\ttfamily\noindent\itshape\color{messagecolor}{\#\# geom\_smooth: method="{}auto"{} and size of largest group is <1000, so using loess. Use 'method = x' to change the smoothing method.}}\end{kframe}
+\includegraphics[width=\maxwidth]{figure/unnamed-chunk-9-3} 
+\begin{kframe}\begin{alltt}
+\hlkwd{qplot}\hlstd{(neph.dat3[,} \hlkwd{c}\hlstd{(}\hlstr{"mesh.90mm_Total.Weight"}\hlstd{)],} \hlkwd{resid}\hlstd{(mnom.length.matrix)[,}\hlnum{3}\hlstd{])} \hlopt{+} \hlkwd{geom_smooth}\hlstd{()}
+\end{alltt}
+
+
+{\ttfamily\noindent\itshape\color{messagecolor}{\#\# geom\_smooth: method="{}auto"{} and size of largest group is <1000, so using loess. Use 'method = x' to change the smoothing method.}}\end{kframe}
+\includegraphics[width=\maxwidth]{figure/unnamed-chunk-9-4} 
+\begin{kframe}\begin{alltt}
+\hlkwd{qplot}\hlstd{(neph.dat3[,} \hlkwd{c}\hlstd{(}\hlstr{"mesh.100mm_Total.Weight"}\hlstd{)],} \hlkwd{resid}\hlstd{(mnom.length.matrix)[,}\hlnum{4}\hlstd{])} \hlopt{+} \hlkwd{geom_smooth}\hlstd{()}
+\end{alltt}
+
+
+{\ttfamily\noindent\itshape\color{messagecolor}{\#\# geom\_smooth: method="{}auto"{} and size of largest group is <1000, so using loess. Use 'method = x' to change the smoothing method.}}\end{kframe}
+\includegraphics[width=\maxwidth]{figure/unnamed-chunk-9-5} 
+\begin{kframe}\begin{alltt}
+\hlcom{## include bulk weight in wide format model, note only including one of the}
+\hlcom{## bulk weights as the explanatory}
+
+\hlstd{neph.dat3}\hlopt{$}\hlstd{av.Total.Weight} \hlkwb{<-} \hlkwd{apply}\hlstd{(neph.dat3[,} \hlkwd{c}\hlstd{(}\hlstr{"mesh.70mm_Total.Weight"}\hlstd{,} \hlstr{"mesh.80mm_Total.Weight"}\hlstd{,} \hlstr{"mesh.90mm_Total.Weight"}\hlstd{,} \hlstr{"mesh.100mm_Total.Weight"}\hlstd{)],} \hlnum{1}\hlstd{, mean)}
+
+\hlstd{mean.wt} \hlkwb{<-} \hlkwd{mean}\hlstd{(neph.dat3}\hlopt{$}\hlstd{av.Total.Weight)}
+
+\hlstd{neph.dat3}\hlopt{$}\hlstd{av.Total.Weight.scaled} \hlkwb{<-} \hlstd{neph.dat3}\hlopt{$}\hlstd{av.Total.Weight} \hlopt{-} \hlstd{mean.wt}
+
+\hlstd{mnom.length.bulk} \hlkwb{<-} \hlkwd{multinom}\hlstd{(}\hlkwd{as.matrix}\hlstd{(neph.dat3[,} \hlkwd{c}\hlstd{(}\hlstr{"70mm_COUNT"}\hlstd{,} \hlstr{"80mm_COUNT"}\hlstd{,} \hlstr{"90mm_COUNT"}\hlstd{,} \hlstr{"100mm_COUNT"}\hlstd{)])} \hlopt{~}
+                             \hlstd{(}\hlkwd{poly}\hlstd{(av.Total.Weight.scaled,} \hlnum{2}\hlstd{)} \hlopt{+} \hlstd{prop.Carapace.Length)}\hlopt{^}\hlnum{2} \hlopt{+}
+                             \hlstd{(}\hlkwd{poly}\hlstd{(av.Total.Weight.scaled,} \hlnum{2}\hlstd{)} \hlopt{+} \hlstd{prop.Carapace.Length2)}\hlopt{^}\hlnum{2} \hlopt{+}
+                             \hlstd{(}\hlkwd{poly}\hlstd{(av.Total.Weight.scaled,} \hlnum{2}\hlstd{)} \hlopt{+} \hlstd{prop.Carapace.Length3)}\hlopt{^}\hlnum{2}\hlstd{,}
+                             \hlcom{##offset(offset.mat),}
+                             \hlkwc{data} \hlstd{= neph.dat3)}
 \end{alltt}
 \begin{verbatim}
-## # weights:  36 (24 variable)
+## # weights:  52 (36 variable)
 ## initial  value 65846.209564 
-## iter  10 value 65582.220539
-## iter  20 value 65400.493488
-## iter  30 value 65364.125707
-## iter  40 value 65361.240613
-## final  value 65361.182171 
+## iter  10 value 65578.319726
+## iter  20 value 65497.714497
+## iter  30 value 65463.674596
+## iter  40 value 65455.587103
+## iter  50 value 65454.225846
+## iter  60 value 65453.755984
+## final  value 65453.493336 
 ## converged
 \end{verbatim}
 \begin{alltt}
-\hlkwd{AIC}\hlstd{(mnom.length.bulk, mnom.length.bulk.inter)}
+\hlcom{## cut the weights here also}
+\hlstd{wt.brks} \hlkwb{<-} \hlkwd{c}\hlstd{(}\hlnum{0}\hlstd{,} \hlnum{44}\hlstd{,} \hlnum{90}\hlstd{,} \hlnum{Inf}\hlstd{)}
+
+\hlstd{neph.dat3}\hlopt{$}\hlstd{cmesh.70mm_Total.Weight} \hlkwb{<-} \hlkwd{cut}\hlstd{(neph.dat3}\hlopt{$}\hlstd{mesh.70mm_Total.Weight,} \hlkwc{breaks} \hlstd{= wt.brks)}
+\hlstd{neph.dat3}\hlopt{$}\hlstd{cmesh.80mm_Total.Weight} \hlkwb{<-} \hlkwd{cut}\hlstd{(neph.dat3}\hlopt{$}\hlstd{mesh.80mm_Total.Weight,} \hlkwc{breaks} \hlstd{= wt.brks)}
+\hlstd{neph.dat3}\hlopt{$}\hlstd{cmesh.90mm_Total.Weight} \hlkwb{<-} \hlkwd{cut}\hlstd{(neph.dat3}\hlopt{$}\hlstd{mesh.90mm_Total.Weight,} \hlkwc{breaks} \hlstd{= wt.brks)}
+\hlstd{neph.dat3}\hlopt{$}\hlstd{cmesh.100mm_Total.Weight} \hlkwb{<-} \hlkwd{cut}\hlstd{(neph.dat3}\hlopt{$}\hlstd{mesh.100mm_Total.Weight,} \hlkwc{breaks} \hlstd{= wt.brks)}
+
+\hlstd{mnom.length.bulkc} \hlkwb{<-} \hlkwd{multinom}\hlstd{(}\hlkwd{as.matrix}\hlstd{(neph.dat3[,} \hlkwd{c}\hlstd{(}\hlstr{"70mm_COUNT"}\hlstd{,} \hlstr{"80mm_COUNT"}\hlstd{,} \hlstr{"90mm_COUNT"}\hlstd{,} \hlstr{"100mm_COUNT"}\hlstd{)])} \hlopt{~}
+                              \hlstd{prop.Carapace.Length} \hlopt{+}
+                              \hlstd{prop.Carapace.Length2} \hlopt{+}
+                              \hlstd{prop.Carapace.Length3} \hlopt{+}
+                              \hlcom{##}
+                              \hlstd{cmesh.70mm_Total.Weight} \hlopt{+}
+                              \hlstd{cmesh.80mm_Total.Weight} \hlopt{+}
+                              \hlstd{cmesh.90mm_Total.Weight} \hlopt{+}
+                              \hlstd{cmesh.100mm_Total.Weight,}
+                              \hlcom{##offset(offset.mat),}
+                              \hlkwc{data} \hlstd{= neph.dat3)}
 \end{alltt}
 \begin{verbatim}
-##                        df      AIC
-## mnom.length.bulk       15 130808.0
-## mnom.length.bulk.inter 24 130770.4
+## # weights:  52 (36 variable)
+## initial  value 65846.209564 
+## iter  10 value 65654.262307
+## iter  20 value 65557.651822
+## iter  30 value 65464.946065
+## iter  40 value 65424.314033
+## iter  50 value 65416.861080
+## final  value 65416.844867 
+## converged
 \end{verbatim}
+\begin{alltt}
+\hlkwd{AIC}\hlstd{(mnom.length.matrix, mnom.length.bulk, mnom.length.bulk.order1, mnom.length.bulk.order2, mnom.length.bulk.order3, mnom.length.bulk.order3c, mnom.length.bulk.order3.nl)}
+\end{alltt}
+
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in lapply(list(object, ...), ll): object 'mnom.length.bulk.order1' not found}}\begin{alltt}
+\hlcom{## INCLUDE HIGHER-ORDER CARAPACE LENGTH}
+\end{alltt}
 \end{kframe}
 \end{knitrout}
 
@@ -531,45 +606,99 @@ Get predictions for low, medium and high catch weights
 \begin{knitrout}\footnotesize
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
-\hlstd{low.med.high.bulk} \hlkwb{<-} \hlkwd{quantile}\hlstd{(weight.dat[weight.dat}\hlopt{$}\hlstd{Species} \hlopt{==} \hlstr{"Bulk"}\hlstd{,]}\hlopt{$}\hlstd{Total.Weight,}
-                              \hlkwc{p} \hlstd{=} \hlkwd{c}\hlstd{(}\hlnum{0.1}\hlstd{,} \hlnum{0.5}\hlstd{,} \hlnum{0.9}\hlstd{))}
+\hlcom{## In the model we include weights by compartment}
+\hlcom{## in the predictions we fix the weights to be equal so we can see the mesh effects}
+\hlcom{## 'standardize for weight effects so we can investigate mesh effects'}
 
-\hlstd{low.med.high.bulk}
+\hlcom{## low.med.high.bulk <- quantile(weight.dat[weight.dat$Species == "Bulk",]$Total.Weight,}
+\hlcom{##                               p = c(0.1, 0.5, 0.9))}
+\hlcom{## low.med.high.bulk}
+\hlcom{## ## set high to 120kg}
+\hlcom{## low.med.high.bulk[3] <- 120}
+
+\hlcom{## get mean total weight per bin used for empirical}
+\hlstd{low.med.high.bulk} \hlkwb{<-} \hlkwd{with}\hlstd{(neph.dat.bulk,} \hlkwd{tapply}\hlstd{(Total.Weight, cTotal.Weight, mean))}
 \end{alltt}
-\begin{verbatim}
-##    10%    50%    90% 
-## 26.132 60.500 93.280
-\end{verbatim}
-\begin{alltt}
-\hlcom{## set high to 120kg}
-\hlstd{low.med.high.bulk[}\hlnum{3}\hlstd{]} \hlkwb{<-} \hlnum{120}
 
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in with(neph.dat.bulk, tapply(Total.Weight, cTotal.Weight, mean)): object 'neph.dat.bulk' not found}}\begin{alltt}
 \hlstd{pred.df} \hlkwb{<-} \hlkwd{expand.grid}\hlstd{(}\hlkwc{Carapace.Length} \hlstd{= pred.length,}
-                       \hlkwc{Total.Weight} \hlstd{= low.med.high.bulk)}
-\hlstd{pred.df}\hlopt{$}\hlstd{Carapace.Length2} \hlkwb{<-} \hlstd{pred.df}\hlopt{$}\hlstd{Carapace.Length}\hlopt{^}\hlnum{2}
-\hlstd{pred.df}\hlopt{$}\hlstd{Carapace.Length3} \hlkwb{<-} \hlstd{pred.df}\hlopt{$}\hlstd{Carapace.Length}\hlopt{^}\hlnum{3}
+                       \hlkwc{av.Total.Weight} \hlstd{= low.med.high.bulk)}
+\end{alltt}
 
-\hlstd{mnom.pred} \hlkwb{<-} \hlkwd{predict}\hlstd{(mnom.length.bulk.inter,} \hlkwc{newdata} \hlstd{= pred.df,} \hlkwc{type} \hlstd{=} \hlstr{"prob"}\hlstd{)}
 
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in expand.grid(Carapace.Length = pred.length, av.Total.Weight = low.med.high.bulk): object 'low.med.high.bulk' not found}}\begin{alltt}
+\hlstd{pred.df}\hlopt{$}\hlstd{av.Total.Weight.scaled} \hlkwb{<-} \hlstd{pred.df}\hlopt{$}\hlstd{av.Total.Weight}\hlopt{-} \hlstd{mean.wt}
+\end{alltt}
+
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in `\$<-.data.frame`(`*tmp*`, "{}av.Total.Weight.scaled"{}, value = numeric(0)): replacement has 0 rows, data has 400}}\begin{alltt}
+\hlcom{## pred.df$mesh.80mm_Total.Weight <- pred.df$mesh.70mm_Total.Weight}
+\hlcom{## pred.df$mesh.90mm_Total.Weight <- pred.df$mesh.70mm_Total.Weight}
+\hlcom{## pred.df$mesh.100mm_Total.Weight <- pred.df$mesh.70mm_Total.Weight}
+
+\hlcom{## pred.df$cmesh.70mm_Total.Weight <- cut(pred.df$mesh.70mm_Total.Weight, breaks = wt.brks)}
+\hlcom{## pred.df$cmesh.80mm_Total.Weight <- cut(pred.df$mesh.80mm_Total.Weight, breaks = wt.brks)}
+\hlcom{## pred.df$cmesh.90mm_Total.Weight <- cut(pred.df$mesh.90mm_Total.Weight, breaks = wt.brks)}
+\hlcom{## pred.df$cmesh.100mm_Total.Weight <- cut(pred.df$mesh.100mm_Total.Weight, breaks = wt.brks)}
+
+\hlstd{pred.df}\hlopt{$}\hlstd{prop.Carapace.Length} \hlkwb{<-} \hlstd{pred.df}\hlopt{$}\hlstd{Carapace.Length}\hlopt{/}\hlstd{max.length}
+\end{alltt}
+
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in `\$<-.data.frame`(`*tmp*`, "{}prop.Carapace.Length"{}, value = numeric(0)): replacement has 0 rows, data has 400}}\begin{alltt}
+\hlstd{pred.df}\hlopt{$}\hlstd{prop.Carapace.Length2} \hlkwb{<-} \hlstd{pred.df}\hlopt{$}\hlstd{prop.Carapace.Length}\hlopt{^}\hlnum{2}
+\end{alltt}
+
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in `\$<-.data.frame`(`*tmp*`, "{}prop.Carapace.Length2"{}, value = numeric(0)): replacement has 0 rows, data has 400}}\begin{alltt}
+\hlstd{pred.df}\hlopt{$}\hlstd{prop.Carapace.Length3} \hlkwb{<-} \hlstd{pred.df}\hlopt{$}\hlstd{prop.Carapace.Length}\hlopt{^}\hlnum{3}
+\end{alltt}
+
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in `\$<-.data.frame`(`*tmp*`, "{}prop.Carapace.Length3"{}, value = numeric(0)): replacement has 0 rows, data has 400}}\begin{alltt}
+\hlcom{## Need to re-define offset here!!}
+\hlcom{## Better to set offset as cbind in data frames}
+\hlcom{##offset.mat <- matrix(0, ncol = 4, nrow = dim(pred.df)[1])}
+
+\hlcom{##mnom.pred <- predict(mnom.length.bulk.order3, newdata = pred.df, type = "prob")}
+\hlstd{mnom.pred} \hlkwb{<-} \hlkwd{predict}\hlstd{(mnom.length.bulk,} \hlkwc{newdata} \hlstd{= pred.df,} \hlkwc{type} \hlstd{=} \hlstr{"prob"}\hlstd{)}
+\end{alltt}
+
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in poly(av.Total.Weight.scaled, 2, coefs = structure(list(alpha = c(2.59920094279836e-15, : object 'av.Total.Weight.scaled' not found}}\begin{alltt}
 \hlstd{m} \hlkwb{<-} \hlkwd{dim}\hlstd{(mnom.pred)[}\hlnum{1}\hlstd{]}
+\end{alltt}
 
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in eval(expr, envir, enclos): object 'mnom.pred' not found}}\begin{alltt}
 \hlstd{mnom.pred.df} \hlkwb{<-} \hlkwd{data.frame}\hlstd{(}
                   \hlkwc{Mesh.Size} \hlstd{=} \hlkwd{factor}\hlstd{(}\hlkwd{rep}\hlstd{(}\hlkwd{c}\hlstd{(}\hlstr{"70mm"}\hlstd{,} \hlstr{"80mm"}\hlstd{,} \hlstr{"90mm"}\hlstd{,} \hlstr{"100mm"}\hlstd{),}
                     \hlkwc{each} \hlstd{= m),} \hlkwc{levels} \hlstd{=} \hlkwd{c}\hlstd{(}\hlstr{"70mm"}\hlstd{,} \hlstr{"80mm"}\hlstd{,} \hlstr{"90mm"}\hlstd{,} \hlstr{"100mm"}\hlstd{)),}
                   \hlkwc{Carapace.Length} \hlstd{=} \hlkwd{rep}\hlstd{(pred.df}\hlopt{$}\hlstd{Carapace.Length,} \hlkwc{times} \hlstd{=} \hlnum{4}\hlstd{),}
-                  \hlkwc{Total.Weight} \hlstd{=} \hlkwd{rep}\hlstd{(pred.df}\hlopt{$}\hlstd{Total.Weight,} \hlkwc{times} \hlstd{=} \hlnum{4}\hlstd{),}
+                  \hlkwc{prop.Carapace.Length} \hlstd{=} \hlkwd{rep}\hlstd{(pred.df}\hlopt{$}\hlstd{prop.Carapace.Length,} \hlkwc{times} \hlstd{=} \hlnum{4}\hlstd{),}
+                  \hlkwc{av.Total.Weight} \hlstd{=} \hlkwd{rep}\hlstd{(pred.df}\hlopt{$}\hlstd{av.Total.Weight,} \hlkwc{times} \hlstd{=} \hlnum{4}\hlstd{),}
                   \hlkwc{proportion} \hlstd{=} \hlkwd{c}\hlstd{(mnom.pred))}
+\end{alltt}
 
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in data.frame(Mesh.Size = factor(rep(c("{}70mm"{}, "{}80mm"{}, "{}90mm"{}, "{}100mm"{}), : object 'mnom.pred' not found}}\begin{alltt}
 \hlstd{mnom.pred.df}\hlopt{$}\hlstd{Bulk.Weight} \hlkwb{<-}
-  \hlkwd{ifelse}\hlstd{(mnom.pred.df}\hlopt{$}\hlstd{Total.Weight} \hlopt{==} \hlstd{low.med.high.bulk[}\hlnum{1}\hlstd{],} \hlstr{"Low (26kg)"}\hlstd{,}
-         \hlkwd{ifelse}\hlstd{(mnom.pred.df}\hlopt{$}\hlstd{Total.Weight} \hlopt{==} \hlstd{low.med.high.bulk[}\hlnum{2}\hlstd{],} \hlstr{"Medium (60.5kg)"}\hlstd{,} \hlstr{"High (120kg)"}\hlstd{)}
+  \hlkwd{ifelse}\hlstd{(mnom.pred.df}\hlopt{$}\hlstd{av.Total.Weight} \hlopt{==} \hlstd{low.med.high.bulk[}\hlnum{1}\hlstd{],} \hlstr{"Low (26kg)"}\hlstd{,}
+         \hlkwd{ifelse}\hlstd{(mnom.pred.df}\hlopt{$}\hlstd{av.Total.Weight} \hlopt{==} \hlstd{low.med.high.bulk[}\hlnum{2}\hlstd{],} \hlstr{"Medium (60.5kg)"}\hlstd{,} \hlstr{"High (120kg)"}\hlstd{)}
          \hlstd{)}
+\end{alltt}
 
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in ifelse(mnom.pred.df\$av.Total.Weight == low.med.high.bulk[1], : object 'mnom.pred.df' not found}}\begin{alltt}
 \hlstd{mnom.pred.df}\hlopt{$}\hlstd{Bulk.Weight} \hlkwb{<-} \hlkwd{factor}\hlstd{(mnom.pred.df}\hlopt{$}\hlstd{Bulk.Weight,}
                                    \hlkwc{levels} \hlstd{=} \hlkwd{c}\hlstd{(}\hlstr{"Low (26kg)"}\hlstd{,} \hlstr{"Medium (60.5kg)"}\hlstd{,} \hlstr{"High (120kg)"}\hlstd{))}
+\end{alltt}
 
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in factor(mnom.pred.df\$Bulk.Weight, levels = c("{}Low (26kg)"{}, "{}Medium (60.5kg)"{}, : object 'mnom.pred.df' not found}}\begin{alltt}
 \hlstd{p} \hlopt{+} \hlkwd{geom_line}\hlstd{(}\hlkwc{data} \hlstd{= mnom.pred.df,}
-              \hlkwd{aes}\hlstd{(}\hlkwc{x} \hlstd{= Carapace.Length}\hlopt{*}\hlstd{max.length,} \hlkwc{y} \hlstd{= proportion,}
+              \hlkwd{aes}\hlstd{(}\hlkwc{x} \hlstd{= Carapace.Length,} \hlkwc{y} \hlstd{= proportion,}
                   \hlkwc{group} \hlstd{= Bulk.Weight,}
                   \hlkwc{colour} \hlstd{= Bulk.Weight))} \hlopt{+}
   \hlkwd{scale_colour_manual}\hlstd{(}\hlkwc{values}\hlstd{=}\hlkwd{c}\hlstd{(}\hlstr{"#619CFF"}\hlstd{,} \hlstr{"#00BA38"}\hlstd{,} \hlstr{"#FF0000"}\hlstd{))} \hlopt{+}
@@ -577,12 +706,79 @@ Get predictions for low, medium and high catch weights
 \hlkwd{geom_hline}\hlstd{(}\hlkwd{aes}\hlstd{(}\hlkwc{yintercept} \hlstd{=} \hlnum{0.25}\hlstd{),} \hlkwc{linetype} \hlstd{=} \hlstr{"dashed"}\hlstd{)} \hlopt{+}
   \hlkwd{geom_vline}\hlstd{(}\hlkwd{aes}\hlstd{(}\hlkwc{xintercept} \hlstd{=} \hlnum{25}\hlstd{),} \hlkwc{linetype} \hlstd{=} \hlstr{"dashed"}\hlstd{)}
 \end{alltt}
-\end{kframe}\begin{figure}
-\includegraphics[width=\maxwidth]{figure/unnamed-chunk-10-1} \caption[Predicted influence of the bulk catch weight (low]{Predicted influence of the bulk catch weight (low: 26kg, medium: 60.5kg, high: 120kg) on the proportion of Nephrops catch retained per net. Null hypothesis of equal retention is displayed as the dashed line at 0.25. Minimum landing size of 25mm is shown as the vertical dashed line.}\label{fig:unnamed-chunk-10}
-\end{figure}
 
 
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in do.call("{}layer"{}, list(mapping = mapping, data = data, stat = stat, : object 'mnom.pred.df' not found}}\end{kframe}
 \end{knitrout}
+
+\begin{knitrout}\footnotesize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlcom{## draw empirical lines}
+\hlcom{## bin the weights}
+\hlstd{neph.dat.bulk} \hlkwb{<-}  \hlkwd{merge}\hlstd{(neph.dat, weight.dat)}
+
+\hlstd{neph.dat.bulk}\hlopt{$}\hlstd{cTotal.Weight} \hlkwb{<-} \hlkwd{cut}\hlstd{(neph.dat.bulk}\hlopt{$}\hlstd{Total.Weight,} \hlkwc{breaks} \hlstd{= wt.brks)}
+\hlcom{##neph.dat.bulk$cTotal.Weight <- 1}
+
+\hlcom{## RAISING NOT INCLUDED UNTIL OFFSET INCLUDED}
+\hlcom{##neph.dat.bulk$rCOUNT <- with(neph.dat.bulk, COUNT/SUBSRATIO)}
+\hlstd{neph.dat.bulk}\hlopt{$}\hlstd{rCOUNT} \hlkwb{<-} \hlkwd{with}\hlstd{(neph.dat.bulk, COUNT)}
+
+\hlstd{count.array} \hlkwb{<-} \hlkwd{with}\hlstd{(neph.dat.bulk,} \hlkwd{tapply}\hlstd{(rCOUNT,} \hlkwd{list}\hlstd{(cTotal.Weight, Carapace.Length, Mesh.Size), sum))}
+
+\hlstd{count.array[}\hlkwd{is.na}\hlstd{(count.array)]} \hlkwb{<-} \hlnum{0}
+
+\hlstd{prop.array} \hlkwb{<-} \hlkwd{prop.table}\hlstd{(count.array,} \hlkwd{c}\hlstd{(}\hlnum{1}\hlstd{,}\hlnum{2}\hlstd{))}
+
+\hlstd{prop.df} \hlkwb{<-} \hlkwd{expand.grid}\hlstd{(}\hlkwc{Total.Weight} \hlstd{=} \hlkwd{dimnames}\hlstd{(prop.array)[[}\hlnum{1}\hlstd{]],}
+                       \hlkwc{Carapace.Length} \hlstd{=} \hlkwd{dimnames}\hlstd{(prop.array)[[}\hlnum{2}\hlstd{]],}
+                       \hlkwc{Mesh.Size} \hlstd{=} \hlkwd{dimnames}\hlstd{(prop.array)[[}\hlnum{3}\hlstd{]],}
+                       \hlkwc{stringsAsFactors} \hlstd{=} \hlnum{FALSE}\hlstd{)}
+
+\hlstd{prop.df}\hlopt{$}\hlstd{empirical.prop} \hlkwb{<-} \hlnum{NA}
+\hlstd{prop.df}\hlopt{$}\hlstd{rCOUNT} \hlkwb{<-} \hlnum{NA}
+
+\hlkwa{for}\hlstd{(i} \hlkwa{in} \hlnum{1}\hlopt{:}\hlkwd{dim}\hlstd{(prop.df)[}\hlnum{1}\hlstd{])\{}
+  \hlcom{## proportion}
+  \hlstd{prop.df}\hlopt{$}\hlstd{empirical.prop[i]} \hlkwb{<-} \hlstd{prop.array[prop.df}\hlopt{$}\hlstd{Total.Weight[i],}
+                                          \hlstd{prop.df}\hlopt{$}\hlstd{Carapace.Length[i],}
+                                          \hlstd{prop.df}\hlopt{$}\hlstd{Mesh.Size[i]}
+                                          \hlstd{]}
+  \hlcom{## count}
+  \hlstd{prop.df}\hlopt{$}\hlstd{rCOUNT[i]} \hlkwb{<-} \hlstd{count.array[prop.df}\hlopt{$}\hlstd{Total.Weight[i],}
+                                   \hlstd{prop.df}\hlopt{$}\hlstd{Carapace.Length[i],}
+                                   \hlstd{prop.df}\hlopt{$}\hlstd{Mesh.Size[i]}
+                                   \hlstd{]}
+\hlstd{\}}
+
+\hlstd{prop.df}\hlopt{$}\hlstd{Bulk.Weight} \hlkwb{<-} \hlkwd{ifelse}\hlstd{(prop.df}\hlopt{$}\hlstd{Total.Weight} \hlopt{==} \hlstr{"(0,44]"}\hlstd{,} \hlstr{"Low (26kg)"}\hlstd{,}
+                              \hlkwd{ifelse}\hlstd{(prop.df}\hlopt{$}\hlstd{Total.Weight} \hlopt{==} \hlstr{"(44,90]"}\hlstd{,} \hlstr{"Medium (60.5kg)"}\hlstd{,} \hlstr{"High (120kg)"}\hlstd{)}
+                              \hlstd{)}
+
+\hlstd{prop.df}\hlopt{$}\hlstd{Carapace.Length} \hlkwb{<-} \hlkwd{as.numeric}\hlstd{(prop.df}\hlopt{$}\hlstd{Carapace.Length)}
+
+\hlstd{prop.df}\hlopt{$}\hlstd{Mesh.Size} \hlkwb{<-} \hlkwd{factor}\hlstd{(prop.df}\hlopt{$}\hlstd{Mesh.Size,} \hlkwc{levels} \hlstd{=} \hlkwd{c}\hlstd{(}\hlstr{"70mm"}\hlstd{,} \hlstr{"80mm"}\hlstd{,} \hlstr{"90mm"}\hlstd{,}\hlstr{"100mm"}\hlstd{))}
+
+\hlcom{## empirical versus modelled}
+
+\hlcom{##pdf("../tex/figures/")}
+\hlkwd{ggplot}\hlstd{(prop.df,} \hlkwd{aes}\hlstd{(}\hlkwc{x} \hlstd{= Carapace.Length,} \hlkwc{y} \hlstd{= empirical.prop,}
+                \hlkwc{group} \hlstd{= Bulk.Weight,}
+                \hlkwc{colour} \hlstd{= Bulk.Weight))} \hlopt{+}
+  \hlkwd{geom_point}\hlstd{(}\hlkwd{aes}\hlstd{(}\hlkwc{size} \hlstd{=} \hlkwd{log}\hlstd{(rCOUNT)),} \hlkwc{linetype} \hlstd{=} \hlstr{"dashed"}\hlstd{,} \hlkwc{alpha} \hlstd{=} \hlnum{0.5}\hlstd{)} \hlopt{+}
+  \hlkwd{facet_wrap}\hlstd{(}\hlopt{~} \hlstd{Mesh.Size)} \hlopt{+}
+  \hlkwd{geom_line}\hlstd{(}\hlkwc{data} \hlstd{= mnom.pred.df,} \hlkwd{aes}\hlstd{(}\hlkwc{x} \hlstd{= Carapace.Length,} \hlkwc{y} \hlstd{= proportion,}
+              \hlkwc{group} \hlstd{= Bulk.Weight,}
+              \hlkwc{colour} \hlstd{= Bulk.Weight))} \hlopt{+}
+  \hlkwd{geom_hline}\hlstd{(}\hlkwd{aes}\hlstd{(}\hlkwc{yintercept} \hlstd{=} \hlnum{0.25}\hlstd{),} \hlkwc{linetype} \hlstd{=} \hlstr{"dashed"}\hlstd{)} \hlopt{+}
+  \hlkwd{geom_vline}\hlstd{(}\hlkwd{aes}\hlstd{(}\hlkwc{xintercept} \hlstd{=} \hlnum{25}\hlstd{),} \hlkwc{linetype} \hlstd{=} \hlstr{"dashed"}\hlstd{)}
+\end{alltt}
+
+
+{\ttfamily\noindent\bfseries\color{errorcolor}{\#\# Error in do.call("{}layer"{}, list(mapping = mapping, data = data, stat = stat, : object 'mnom.pred.df' not found}}\end{kframe}
+\end{knitrout}
+
 
 \bibliography{../../../../misc/epif_bibliography}
 \bibliographystyle{../../../../misc/cjfas}

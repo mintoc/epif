@@ -1,4 +1,4 @@
-%% knit("diamond_neph_lfreq_model.Rnw")
+%% knit("quad-rig_catch_comparison.Rnw")
 
 \documentclass[12pt]{article}
 \usepackage{times}
@@ -21,7 +21,7 @@
 \setlength{\parindent}{0pt}
 
 \title{A preliminary model for Quad-Rig catch comparison}
-\author{For discussion only}
+\author{Updated to include additional trial data}
 \date{}
 
 \begin{document}
@@ -164,15 +164,15 @@ mnom0 <- multinom(neph.count.mat ~ 1 + offset(offset.mat))
 ## include carapace length 
 ## first scale it to range between zero and one
 max.length <- max(neph.cast$Carapace.Length)
-neph.cast$Carapace.Length <- neph.cast$Carapace.Length/max.length
+neph.cast$prop.Carapace.Length <- neph.cast$Carapace.Length/max.length
 
 ## Extend to third order polynomial (based on AIC and BIC)
-neph.cast$Carapace.Length2 <- neph.cast$Carapace.Length^2
-neph.cast$Carapace.Length3 <- neph.cast$Carapace.Length^3
+neph.cast$prop.Carapace.Length2 <- neph.cast$prop.Carapace.Length^2
+neph.cast$prop.Carapace.Length3 <- neph.cast$prop.Carapace.Length^3
 
 ## 
 mnom.length <- multinom(neph.count.mat ~ 
-                        Carapace.Length + Carapace.Length2 + Carapace.Length3 + 
+                        prop.Carapace.Length + prop.Carapace.Length2 + prop.Carapace.Length3 + 
                         offset(offset.mat), data = neph.cast)
 
 AIC(mnom0, mnom.length)
@@ -193,11 +193,14 @@ Sigma <- vcov(mnom.length)
 
 ## number of lengths to predict for
 nlength <- 100
+pred.prop.length <- seq(min(neph.cast$prop.Carapace.Length), 
+                        max(neph.cast$prop.Carapace.Length), length = 100)
+
 pred.length <- seq(min(neph.cast$Carapace.Length), 
-                   max(neph.cast$Carapace.Length), length = 100)
+                        max(neph.cast$Carapace.Length), length = 100)
 
 ## model matrix
-X <- cbind(1, pred.length, pred.length^2, pred.length^3)
+X <- cbind(1, pred.prop.length, pred.prop.length^2, pred.prop.length^3)
 
 ## number of times to resample predictions to get CIs
 nresamp <- 100
@@ -232,12 +235,13 @@ pred.lower <- apply(pred.array, c(1, 2), quantile, p = 0.025)
 m <- dim(pred.mu)[1]
 
 pred.ci.df <- data.frame(
-               Mesh.Size = factor(rep(c("70mm", "80mm", "90mm", "100mm"), 
+                Mesh.Size = factor(rep(c("70mm", "80mm", "90mm", "100mm"), 
                  each = m), levels = c("70mm", "80mm", "90mm", "100mm")),
-               Carapace.Length = rep(pred.length * max.length, times = 4),
-               proportion = c(pred.mu),
-               lower = c(pred.lower),
-               upper = c(pred.upper))
+                Carapace.Length = rep(pred.length, times = 4),
+                proportion = c(pred.mu),
+                lower = c(pred.lower),
+                upper = c(pred.upper))
+
 @ 
 
 Finally overlay the fit on the sample proportions
@@ -267,7 +271,7 @@ n <- nrow(neph.dat)
 ##                          round(neph.dat$COUNT/neph.dat$SUBSRATIO, 0)), ]
 
 ## Note: no raising here
-neph.dat2 <- neph.dat[rep(1:n, times = neph.dat$COUNT), ]
+##neph.dat2 <- neph.dat[rep(1:n, times = neph.dat$COUNT), ]
 
 weight.dat <- read.xls("../data/Celtic Warrior Diamond mesh July 2014 Celtic Sea.xls", 
                        sheet = "Weights",
@@ -282,16 +286,37 @@ weight.dat$HAUL <- paste("H", weight.dat$Haul.., sep ="")
 ## re-name total weight column
 names(weight.dat)[names(weight.dat) == "Total.weight..kg."] <- "Total.Weight"
 
+weight.dat <- subset(weight.dat, Species == "Bulk")
+
+
+## melt the data frame
+weight.melt <- melt(weight.dat[, c("HAUL", "Mesh.Size", "Total.Weight")], 
+                  id = c("Mesh.Size", "HAUL"))
+
+## re-form the dataframe in required format 
+weight.cast <- cast(weight.melt, HAUL ~ Mesh.Size  + variable)
+weight.cast <- weight.cast[order(weight.cast$HAUL), ]
+weight.cast[is.na(weight.cast)] <- 0
+
+## show the first few rows
+head(weight.cast, 2)
+
+weight.cast$fHAUL <- factor(weight.cast$HAUL)
+
+names(weight.cast)[grep("^[0-9]", names(weight.cast))] <- paste("mesh.", names(weight.cast)[grep("^[0-9]", names(weight.cast))], sep = "")
+
 ## merge nephrops length and total bulk weight data
-neph.dat3 <- merge(neph.dat2, 
-                   subset(weight.dat, Species == "Bulk")[, c("Mesh.Size", "HAUL", 
-                                        "Total.Weight")],
-                   by = c("Mesh.Size", "HAUL"))
+neph.dat3 <- merge(neph.cast,
+                   weight.cast,
+                   by = c("fHAUL"),
+                   sort = FALSE
+                   )
 
 max.length <- max(neph.dat3$Carapace.Length)
-neph.dat3$Carapace.Length <- neph.dat3$Carapace.Length/max.length
-neph.dat3$Carapace.Length2 <- neph.dat3$Carapace.Length^2
-neph.dat3$Carapace.Length3 <- neph.dat3$Carapace.Length^3
+neph.dat3$prop.Carapace.Length <- neph.dat3$Carapace.Length/max.length
+neph.dat3$prop.Carapace.Length2 <- neph.dat3$prop.Carapace.Length^2
+neph.dat3$prop.Carapace.Length3 <- neph.dat3$prop.Carapace.Length^3
+neph.dat3$prop.Carapace.Length4 <- neph.dat3$prop.Carapace.Length^4
 
 @ 
 
@@ -299,60 +324,108 @@ Include weight in the fit
 
 <<eval = TRUE>>=
 ## compare two ways of writing same model
+
 ## in matrix format, as before except without offset for the moment
-mnom.length.matrix <- multinom(neph.count.mat ~ 
-                               Carapace.Length + 
-                               Carapace.Length2 + 
-                               Carapace.Length3, data = neph.cast)
+mnom.length.matrix <- multinom(as.matrix(neph.dat3[, c("70mm_COUNT", "80mm_COUNT", "90mm_COUNT", "100mm_COUNT")]) ~ 
+                               prop.Carapace.Length + 
+                               prop.Carapace.Length2 + 
+                               prop.Carapace.Length3,
+                               ##offset(offset.mat), 
+                               data = neph.dat3)
 
-## in long format (row per measurement)
-mnom.length.long <- multinom(fMesh.Size ~ 
-                             Carapace.Length + 
-                             Carapace.Length2 + 
-                             Carapace.Length3, data = neph.dat3)
+## take a look at the residuals by bulk weight
+plot(neph.dat3[, c("mesh.70mm_Total.Weight", "mesh.80mm_Total.Weight", "mesh.90mm_Total.Weight", "mesh.100mm_Total.Weight")])
 
-AIC(mnom.length.matrix, mnom.length.long)
-## Same model, now include bulk weight in long format model 
-## in addition to carapace polynomials
+## very strong correlation in the counts
+round(cor(neph.dat3[, c("mesh.70mm_Total.Weight", "mesh.80mm_Total.Weight", "mesh.90mm_Total.Weight", "mesh.100mm_Total.Weight")]), 3)
 
-mnom.length.bulk <- multinom(fMesh.Size ~ 
-                             Carapace.Length + 
-                             Carapace.Length2 + 
-                             Carapace.Length3 + Total.Weight, data = neph.dat3)
-AIC(mnom.length.long, mnom.length.bulk)
+## resids versus weights
+qplot(neph.dat3[, c("mesh.70mm_Total.Weight")], resid(mnom.length.matrix)[,1]) + geom_smooth()
+qplot(neph.dat3[, c("mesh.80mm_Total.Weight")], resid(mnom.length.matrix)[,2]) + geom_smooth()
+qplot(neph.dat3[, c("mesh.90mm_Total.Weight")], resid(mnom.length.matrix)[,3]) + geom_smooth()
+qplot(neph.dat3[, c("mesh.100mm_Total.Weight")], resid(mnom.length.matrix)[,4]) + geom_smooth()
 
-## interaction between length and bulk
-mnom.length.bulk.inter <- multinom(fMesh.Size ~ 
-                                   Carapace.Length + 
-                                   Carapace.Length2 + 
-                                   Carapace.Length3 + 
-                                   Total.Weight +
-                                   Carapace.Length:Total.Weight + 
-                                   Carapace.Length2:Total.Weight + 
-                                   Carapace.Length3:Total.Weight 
-                                   , data = neph.dat3)
 
-AIC(mnom.length.bulk, mnom.length.bulk.inter)
+## include bulk weight in wide format model, note only including one of the
+## bulk weights as the explanatory
+
+neph.dat3$av.Total.Weight <- apply(neph.dat3[, c("mesh.70mm_Total.Weight", "mesh.80mm_Total.Weight", "mesh.90mm_Total.Weight", "mesh.100mm_Total.Weight")], 1, mean)
+
+mean.wt <- mean(neph.dat3$av.Total.Weight)
+
+neph.dat3$av.Total.Weight.scaled <- neph.dat3$av.Total.Weight - mean.wt
+
+mnom.length.bulk <- multinom(as.matrix(neph.dat3[, c("70mm_COUNT", "80mm_COUNT", "90mm_COUNT", "100mm_COUNT")]) ~ 
+                             (poly(av.Total.Weight.scaled, 2) + prop.Carapace.Length)^2 +
+                             (poly(av.Total.Weight.scaled, 2) + prop.Carapace.Length2)^2 +
+                             (poly(av.Total.Weight.scaled, 2) + prop.Carapace.Length3)^2,
+                             ##offset(offset.mat),
+                             data = neph.dat3)
+
+## cut the weights here also
+wt.brks <- c(0, 44, 90, Inf)
+
+neph.dat3$cmesh.70mm_Total.Weight <- cut(neph.dat3$mesh.70mm_Total.Weight, breaks = wt.brks)
+neph.dat3$cmesh.80mm_Total.Weight <- cut(neph.dat3$mesh.80mm_Total.Weight, breaks = wt.brks)
+neph.dat3$cmesh.90mm_Total.Weight <- cut(neph.dat3$mesh.90mm_Total.Weight, breaks = wt.brks)
+neph.dat3$cmesh.100mm_Total.Weight <- cut(neph.dat3$mesh.100mm_Total.Weight, breaks = wt.brks)
+
+mnom.length.bulkc <- multinom(as.matrix(neph.dat3[, c("70mm_COUNT", "80mm_COUNT", "90mm_COUNT", "100mm_COUNT")]) ~ 
+                              prop.Carapace.Length + 
+                              prop.Carapace.Length2 + 
+                              prop.Carapace.Length3 +
+                              ##
+                              cmesh.70mm_Total.Weight + 
+                              cmesh.80mm_Total.Weight + 
+                              cmesh.90mm_Total.Weight + 
+                              cmesh.100mm_Total.Weight, 
+                              ##offset(offset.mat),
+                              data = neph.dat3)
+
+AIC(mnom.length.matrix, mnom.length.bulk, mnom.length.bulk.order1, mnom.length.bulk.order2, mnom.length.bulk.order3, mnom.length.bulk.order3c, mnom.length.bulk.order3.nl)
+
+## INCLUDE HIGHER-ORDER CARAPACE LENGTH
 @
 
 Get predictions for low, medium and high catch weights
 
 <<eval = TRUE, fig.allign = "center", fig.cap = "Predicted influence of the bulk catch weight (low: 26kg, medium: 60.5kg, high: 120kg) on the proportion of Nephrops catch retained per net. Null hypothesis of equal retention is displayed as the dashed line at 0.25. Minimum landing size of 25mm is shown as the vertical dashed line.", fig.width = 8, fig.height = 7>>=
+## In the model we include weights by compartment
+## in the predictions we fix the weights to be equal so we can see the mesh effects
+## 'standardize for weight effects so we can investigate mesh effects'
 
-low.med.high.bulk <- quantile(weight.dat[weight.dat$Species == "Bulk",]$Total.Weight,
-                              p = c(0.1, 0.5, 0.9))
+## low.med.high.bulk <- quantile(weight.dat[weight.dat$Species == "Bulk",]$Total.Weight,
+##                               p = c(0.1, 0.5, 0.9))
+## low.med.high.bulk
+## ## set high to 120kg
+## low.med.high.bulk[3] <- 120
 
-low.med.high.bulk
-
-## set high to 120kg
-low.med.high.bulk[3] <- 120
+## get mean total weight per bin used for empirical
+low.med.high.bulk <- with(neph.dat.bulk, tapply(Total.Weight, cTotal.Weight, mean))
 
 pred.df <- expand.grid(Carapace.Length = pred.length,
-                       Total.Weight = low.med.high.bulk)
-pred.df$Carapace.Length2 <- pred.df$Carapace.Length^2
-pred.df$Carapace.Length3 <- pred.df$Carapace.Length^3
+                       av.Total.Weight = low.med.high.bulk)
+pred.df$av.Total.Weight.scaled <- pred.df$av.Total.Weight- mean.wt
 
-mnom.pred <- predict(mnom.length.bulk.inter, newdata = pred.df, type = "prob")
+## pred.df$mesh.80mm_Total.Weight <- pred.df$mesh.70mm_Total.Weight
+## pred.df$mesh.90mm_Total.Weight <- pred.df$mesh.70mm_Total.Weight
+## pred.df$mesh.100mm_Total.Weight <- pred.df$mesh.70mm_Total.Weight
+
+## pred.df$cmesh.70mm_Total.Weight <- cut(pred.df$mesh.70mm_Total.Weight, breaks = wt.brks)
+## pred.df$cmesh.80mm_Total.Weight <- cut(pred.df$mesh.80mm_Total.Weight, breaks = wt.brks)
+## pred.df$cmesh.90mm_Total.Weight <- cut(pred.df$mesh.90mm_Total.Weight, breaks = wt.brks)
+## pred.df$cmesh.100mm_Total.Weight <- cut(pred.df$mesh.100mm_Total.Weight, breaks = wt.brks)
+
+pred.df$prop.Carapace.Length <- pred.df$Carapace.Length/max.length
+pred.df$prop.Carapace.Length2 <- pred.df$prop.Carapace.Length^2
+pred.df$prop.Carapace.Length3 <- pred.df$prop.Carapace.Length^3
+
+## Need to re-define offset here!!
+## Better to set offset as cbind in data frames
+##offset.mat <- matrix(0, ncol = 4, nrow = dim(pred.df)[1])
+
+##mnom.pred <- predict(mnom.length.bulk.order3, newdata = pred.df, type = "prob")
+mnom.pred <- predict(mnom.length.bulk, newdata = pred.df, type = "prob")
 
 m <- dim(mnom.pred)[1]
 
@@ -360,19 +433,20 @@ mnom.pred.df <- data.frame(
                   Mesh.Size = factor(rep(c("70mm", "80mm", "90mm", "100mm"), 
                     each = m), levels = c("70mm", "80mm", "90mm", "100mm")),
                   Carapace.Length = rep(pred.df$Carapace.Length, times = 4),
-                  Total.Weight = rep(pred.df$Total.Weight, times = 4),
+                  prop.Carapace.Length = rep(pred.df$prop.Carapace.Length, times = 4),
+                  av.Total.Weight = rep(pred.df$av.Total.Weight, times = 4),
                   proportion = c(mnom.pred))
 
 mnom.pred.df$Bulk.Weight <- 
-  ifelse(mnom.pred.df$Total.Weight == low.med.high.bulk[1], "Low (26kg)",
-         ifelse(mnom.pred.df$Total.Weight == low.med.high.bulk[2], "Medium (60.5kg)", "High (120kg)")
+  ifelse(mnom.pred.df$av.Total.Weight == low.med.high.bulk[1], "Low (26kg)",
+         ifelse(mnom.pred.df$av.Total.Weight == low.med.high.bulk[2], "Medium (60.5kg)", "High (120kg)")
          )
 
 mnom.pred.df$Bulk.Weight <- factor(mnom.pred.df$Bulk.Weight, 
                                    levels = c("Low (26kg)", "Medium (60.5kg)", "High (120kg)"))
 
 p + geom_line(data = mnom.pred.df, 
-              aes(x = Carapace.Length*max.length, y = proportion, 
+              aes(x = Carapace.Length, y = proportion, 
                   group = Bulk.Weight,
                   colour = Bulk.Weight)) +
   scale_colour_manual(values=c("#619CFF", "#00BA38", "#FF0000")) +
@@ -380,7 +454,72 @@ p + geom_line(data = mnom.pred.df,
 geom_hline(aes(yintercept = 0.25), linetype = "dashed") +
   geom_vline(aes(xintercept = 25), linetype = "dashed")
 
+@
+
+<<eval = TRUE>>=
+## draw empirical lines
+## bin the weights
+neph.dat.bulk <-  merge(neph.dat, weight.dat)
+
+neph.dat.bulk$cTotal.Weight <- cut(neph.dat.bulk$Total.Weight, breaks = wt.brks)
+##neph.dat.bulk$cTotal.Weight <- 1
+
+## RAISING NOT INCLUDED UNTIL OFFSET INCLUDED
+##neph.dat.bulk$rCOUNT <- with(neph.dat.bulk, COUNT/SUBSRATIO)
+neph.dat.bulk$rCOUNT <- with(neph.dat.bulk, COUNT)
+
+count.array <- with(neph.dat.bulk, tapply(rCOUNT, list(cTotal.Weight, Carapace.Length, Mesh.Size), sum))
+
+count.array[is.na(count.array)] <- 0
+
+prop.array <- prop.table(count.array, c(1,2))
+
+prop.df <- expand.grid(Total.Weight = dimnames(prop.array)[[1]],
+                       Carapace.Length = dimnames(prop.array)[[2]],
+                       Mesh.Size = dimnames(prop.array)[[3]],
+                       stringsAsFactors = FALSE)
+
+prop.df$empirical.prop <- NA
+prop.df$rCOUNT <- NA
+
+for(i in 1:dim(prop.df)[1]){
+  ## proportion
+  prop.df$empirical.prop[i] <- prop.array[prop.df$Total.Weight[i],
+                                          prop.df$Carapace.Length[i],
+                                          prop.df$Mesh.Size[i]
+                                          ]
+  ## count
+  prop.df$rCOUNT[i] <- count.array[prop.df$Total.Weight[i],
+                                   prop.df$Carapace.Length[i],
+                                   prop.df$Mesh.Size[i]
+                                   ]
+}
+
+prop.df$Bulk.Weight <- ifelse(prop.df$Total.Weight == "(0,44]", "Low (26kg)",
+                              ifelse(prop.df$Total.Weight == "(44,90]", "Medium (60.5kg)", "High (120kg)")
+                              )
+
+prop.df$Carapace.Length <- as.numeric(prop.df$Carapace.Length)
+
+prop.df$Mesh.Size <- factor(prop.df$Mesh.Size, levels = c("70mm", "80mm", "90mm","100mm"))
+
+## empirical versus modelled
+
+##pdf("../tex/figures/")
+ggplot(prop.df, aes(x = Carapace.Length, y = empirical.prop, 
+                group = Bulk.Weight,
+                colour = Bulk.Weight)) +
+  geom_point(aes(size = log(rCOUNT)), linetype = "dashed", alpha = 0.5) +
+  facet_wrap(~ Mesh.Size) +
+  geom_line(data = mnom.pred.df, aes(x = Carapace.Length, y = proportion,
+              group = Bulk.Weight,
+              colour = Bulk.Weight)) +  
+  geom_hline(aes(yintercept = 0.25), linetype = "dashed") +
+  geom_vline(aes(xintercept = 25), linetype = "dashed")
+
+
 @ 
+
 
 \bibliography{../../../../misc/epif_bibliography}
 \bibliographystyle{../../../../misc/cjfas}
