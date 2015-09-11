@@ -13,7 +13,7 @@ org-clock-save.el
 emacs-config.el
 *.RData
 *.Rhistory
-*.docx
+##*.docx
 *.xls*
 *.csv
 *.out
