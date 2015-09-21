@@ -12,7 +12,8 @@ multinom.nll <- function(theta, Y, X){
   eta <- X %*% beta
   ## probabilities - double check with Greene
   ##P <- exp(eta) / (1 + rowSums(exp(eta[, - 1])))
-  P <- exp(eta) / (1 + rowSums(exp(eta)))
+  ##P <- exp(eta) / (1 + rowSums(exp(eta)))
+  P <- exp(eta) / rowSums(exp(eta))
   ## log-likelihood
   ## note doing this because dmultinom works on a vector not matrix
   nll <- - sum(sapply(1:nrow(Y), function(z){

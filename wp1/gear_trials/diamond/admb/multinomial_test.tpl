@@ -25,7 +25,14 @@ PROCEDURE_SECTION
   //cout << betaconvert << endl;
   dvar_matrix beta = beta0 * betaconvert;
   //cout << beta << endl << endl;
-  dvar_matrix eta = X*beta;
+  //dvar_matrix eta = X*beta;
+  dvar_matrix eta(1,n,1,m);
+  //dvar_matrix eta = X * beta;//+ u(gp(i)); 
+  for (int i=1;i<=n;i++){
+    for (int j=1;j<=m;j++){
+      eta(i,j) = sum(elem_prod(X(i),trans(beta)(j)));
+    }
+  }
   // get rowsums
   dvar_matrix ones(1,m,1,1);
   ones = ones + 1.0;

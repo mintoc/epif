@@ -62,8 +62,6 @@ private:
   void end_df1b2_funnel(void);
   dvector double_control_flags;
   param_init_matrix beta0;
-  param_matrix L;
-  param_init_vector a;
   random_effects_matrix u0;
   param_number prior_function_value;
   param_number likelihood_function_value;
@@ -106,8 +104,6 @@ public:
     df1b2_parameters_ptr=this;
   }
   df1b2_init_matrix beta0;
-  df1b2matrix L;
-  df1b2_init_vector a;
   df1b2_init_matrix u0;
   df1b2variable prior_function_value;
   df1b2variable likelihood_function_value;

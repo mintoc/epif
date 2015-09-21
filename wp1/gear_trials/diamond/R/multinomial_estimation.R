@@ -16,12 +16,17 @@ source("multi_funs.R")
 
 ## MULTINOMIAL WITH REGRESSORS
 ## make some multinomial data
-Y <- t(rmultinom(20, size = 20, prob = c(0.1, 0.3, 0.1, 0.5)))
+n <- 40
+Y <- t(rmultinom(n, size = 20, prob = c(0.1, 0.3, 0.1, 0.5)))
 
 ## random regressors
 x1 <- rnorm(nrow(Y))
 x2 <- rnorm(nrow(Y))
-## fit with nnet
+
+## groups for random effects
+gps <- rep(seq(1,n/4), each = 4)
+
+## fit with nnet, no random effects
 multinom.fit <- multinom(Y ~ x1 + x2)
 
 ## fit with mglm
@@ -121,15 +126,103 @@ abline(c(0,1))
 ##------
 ## ADMB
 ##------
+m <- 3
+a <- rnorm((m-1)*(m)/2, sd = 1)
+
+L <- matrix(0, nrow = m - 1, ncol = m - 1)
+
+ii <- 1
+
+for(i in 1:(m-1)){
+  for(j in 1:i){
+    L[i,j] <- a[ii]
+    ii <- ii + 1
+  }
+}
+
+Sigma <- L%*%t(L)
+
+ngp <- 10
+u0 <- mvrnorm(ngp, mu = rep(0, m-1), Sigma)
+u <- cbind(0, u0)
+nobspergp <- 20
+n <- ngp * nobspergp
+
+X <- cbind(1, rnorm(n))
+
+p <- ncol(X)
+
+beta0 <- matrix(rnorm((m-1) * p), nrow = p)
+
+beta <- cbind(0, beta0)
+
+gps <- rep(1:ngp, each = nobspergp)
+eta <- X %*% beta + u[gps,]
+P <- exp(eta) / (rowSums(exp(eta)))
+
+Y <- t(apply(P, 1, FUN = function(z){
+  rmultinom(1, size = 20, prob = z)
+}))
+
 ## write the data out
 datfile <- "../admb/multinomial.dat"
 cat("# number of observations n \n", nrow(Y), "\n", file = datfile)
-cat("# number of groups m \n", ncol(Y), "\n", file = datfile, append = TRUE)
+cat("# number of categories m \n", ncol(Y), "\n", file = datfile, append = TRUE)
 cat("# dimension of parameter vector p \n", ncol(X), "\n", file = datfile, append = TRUE)
+cat("# number of groups ngp \n", length(unique(gps)), "\n", file = datfile, append = TRUE)
 cat("# response counts Y \n", file = datfile, append = TRUE)
 write.table(Y, file = datfile, append = TRUE, col.names = FALSE, row.names = FALSE)
 cat("# model/design matrix X \n", file = datfile, append = TRUE)
 write.table(X, file = datfile, append = TRUE, col.names = FALSE, row.names = FALSE)
+cat("# groups \n", gps, "\n", file = datfile, append = TRUE)
+
+## pinfile
+datfile <- "../admb/multinomial.pin"
+cat("# beta0 \n", file = datfile)
+write.table(beta0 * 0, file = datfile, append = TRUE, col.names = FALSE, row.names = FALSE)
+cat("# a \n", rep(0.1, length(a)), "\n", file = datfile, append = TRUE)
+cat("# u0 \n", file = datfile, append = TRUE)
+write.table(u0 * 0, file = datfile, append = TRUE, col.names = FALSE, row.names = FALSE)
+
+
+admb.res <- read.table("../admb/multinomial.std", header = TRUE)
+
+uhat <- matrix(admb.res$value[admb.res$name == "u0"], ncol = m - 1, byrow = TRUE)
+
+plot(u0, uhat)
+abline(c(0,1))
+
+
+
+
+## BINARY EXAMPLE
+library(lme4)
+(gm1 <- glmer(cbind(incidence, size - incidence) ~ period + (1 | herd),
+              data = cbpp, family = binomial))
+
+
+
+##(gm1 <- glm(cbind(incidence, size - incidence) ~ period,
+##            data = cbpp, family = binomial))
+
+
+Y <- with(cbpp, cbind(incidence, size - incidence))
+X <- model.matrix(gm1)
+gps <- cbpp$herd
+
+## write the data out
+## write the data out
+datfile <- "../admb/multinomial.dat"
+cat("# number of observations n \n", nrow(Y), "\n", file = datfile)
+cat("# number of categories m \n", ncol(Y), "\n", file = datfile, append = TRUE)
+cat("# dimension of parameter vector p \n", ncol(X), "\n", file = datfile, append = TRUE)
+cat("# number of groups ngp \n", length(unique(gps)), "\n", file = datfile, append = TRUE)
+cat("# response counts Y \n", file = datfile, append = TRUE)
+write.table(Y, file = datfile, append = TRUE, col.names = FALSE, row.names = FALSE)
+cat("# model/design matrix X \n", file = datfile, append = TRUE)
+write.table(X, file = datfile, append = TRUE, col.names = FALSE, row.names = FALSE)
+cat("# groups \n", gps, "\n", file = datfile, append = TRUE)
+
 
 
 ##-----
