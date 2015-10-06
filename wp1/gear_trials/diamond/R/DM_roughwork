@@ -1,4 +1,8 @@
-##First Attempt - Complex version of the simple trial run earlier
+##The first attempt is using just randomly generated data while the second uses some simulated data that has similar bounds as
+##the gear trial data but warnings are still being produced.
+
+##First Attempt - A version of this data was used to test the DM functions and worked. This is similar but has a larger number
+##of observations
 Y.dat <- t(rmultinom(100, size=50, prob=c(0.4, 0.2, 0.3, 0.1)))
 
 x1 <- rnorm(nrow(Y))
