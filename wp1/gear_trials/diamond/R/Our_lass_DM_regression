@@ -5,12 +5,13 @@ library(MGLM)
 library(xlsx)
 
 require(xlsx)
-##Data Loading/Cleaning/Organising 
 ##set new path for loading data
 neph.dat <- read.xlsx("C:/Users/bburke/Desktop/GMIT/Gear Trials/Data/2015 BIM Nephrops quad rig trials/Our Lass 2 70_80_90_100mm codends Irish Sea July 2015/Nephrops Raised Counts Our Lass 2 Irish Sea July 2015.xlsx", sheetName="All hauls", header=TRUE, perl="C:\\Strawberry\\perl\\bin\\perl.exe")
 neph.dat$perl <- NULL
 neph.dat$Raised.count. <- NULL
+
 head(neph.dat)
+
 neph.dat$Mesh.Size <- paste("ms",neph.dat$Mesh.Size, sep="")
 neph.dat$SUBSRATIO<- 1/neph.dat$Overall.raising.factor
 
@@ -53,7 +54,7 @@ dm.nll.o <- function(theta, Y, X, off){
 }
 ###########################################################################################
 
-vars2keep <- c("Haul.No", "Codend.No", "Mesh.Size", "Net.position", "Carapace.length", "Count", "SUBSRATIO", "Total.catch")
+vars2keep <- c("Haul.No", "Codend.No", "Mesh.Size", "Net.position", "Carapace.length", "Count", "SUBSRATIO","Total.catch")
 neph.melt <- melt(neph.dat[,vars2keep], id=c("Carapace.length", "Net.position", "Mesh.Size", "Haul.No", "Codend.No"))
 neph.cast <- cast(neph.melt, Haul.No + Carapace.length + Net.position + Codend.No ~ Mesh.Size + variable)
 
@@ -66,7 +67,7 @@ neph.cast$ms80mm_Count[is.na(neph.cast$ms80mm_Count)]<- 0
 neph.cast$ms90mm_Count[is.na(neph.cast$ms90mm_Count)]<- 0
 
 
-##This loop is used to fill in the Subsample column for all nets
+##This loop is used to fill in the Subsample column
 for(i in 1:dim(neph.cast)[1]){
   haul.dat <- subset(neph.cast, Haul.No == neph.cast$Haul.No[i])
   
@@ -109,23 +110,24 @@ for(i in 1:dim(neph.cast)[1]){
 }  
 
 ##Created Variables for Carapace Length
-ncl <- neph.cast$Carapace.length
+ncl <- neph.cast$Carapace.length ##/ (2*sd( neph.cast$Carapace.length))
 ncl2 <- neph.cast$Carapace.length^2
 ncl3 <- neph.cast$Carapace.length^3
 
 ##Created Variable for Weight
 catch <- with(neph.cast, cbind(ms100mm_Total.catch, ms90mm_Total.catch, ms80mm_Total.catch, ms70mm_Total.catch))
 
-##Set up Models
+##Set up model
 ##Model 1 - Just carapace length
 dvar <- with(neph.cast, cbind(ms100mm_Count, ms90mm_Count, ms80mm_Count, ms70mm_Count))
 invar <- cbind(1, ncl) 
 offset.mat <- with(neph.cast, cbind(ms100mm_SUBSRATIO, ms90mm_SUBSRATIO, ms80mm_SUBSRATIO, ms70mm_SUBSRATIO))
 
-npar <- ncol(dvar)*ncol(invar)
-start.par <- rep(0,npar)
+npar <- ncol(dvar) * ncol(invar)
+start.par <- rep(1,npar)
 
-fit1 <- optim(par=start.par, Y=dvar, X=invar, off=offset.mat, fn=dm.nll.o, control = list(trace = 1, reltol=1e-16, abstol=1e-16), method="BFGS")
+##fit1 <- optim(par=start.par, Y=dvar, X=invar, off=offset.mat, fn=dm.nll.o, control = list(trace = 1, reltol=1e-16, abstol=1e-16), method="BFGS")
+fit1 <- optim(par=start.par, Y=dvar, X=invar, off=offset.mat, fn=dm.nll.o, control = list(trace = 1), method="BFGS")
 
 beta <- matrix(fit1$par, ncol=ncol(dvar))
 eta <- invar %*% beta
@@ -155,12 +157,3 @@ beta3 <- matrix(fit3$par, ncol=ncol(dvar))
 eta <- invar3 %*% beta3
 
 p<- exp(eta)/rowSums(exp(eta))
-
-
-
-
-
-
-
-
-
