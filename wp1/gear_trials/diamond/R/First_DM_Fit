@@ -1,0 +1,76 @@
+##This is the very first model ran using the DM distribution
+##The DM function at the bottom of the script are from the multi_funs script and are unchanged
+Y <- cbind(10,20,8,40)
+
+## sub-sampling ratios
+offset.mat <- cbind(0.125,0.25,0.1,0.5)
+
+x1 <- rnorm(nrow(Y))
+x2 <- rnorm(nrow(Y))
+X <- cbind(1, x1, x2)
+
+npar <- ncol(Y) *  ncol(X)
+start.par <- rep(0, npar)
+
+fit2 <- optim(par = start.par, fn = dm.nll.o, Y = Y, X = X, off = offset.mat, control = list(trace = 1, reltol=1e-16, abstol=1e-16), method = "BFGS")
+
+beta <- matrix(fit2$par, ncol = ncol(Y))
+eta <- X %*% beta
+
+##Double check - slightly off
+(P <- exp(eta) / rowSums(exp(eta)))
+
+
+
+## DIRICHLET-MULTINOMIAL PDF
+ddm <- function(n, alpha, log = FALSE){
+  ## calculates pdf on log-scale
+  ## to deal with large numbers
+  ## http://www2.math.su.se/matstat/reports/seriec/2014/rep6/report.pdf
+  N <- sum(n)
+  lpdf <- lfactorial(N) - sum(lfactorial(n)) + lgamma(sum(alpha)) - lgamma(sum(alpha + n)) + sum(lgamma(alpha + n) - lgamma(alpha))
+  pdf <- exp(lpdf)
+  if(log){
+    return(lpdf)
+  }else{
+    return(pdf)
+  }
+}
+
+ddm2 <- function(n, alpha, log = FALSE){
+  ## from wikipedia
+  ## calculates pdf on log-scale
+  ## to deal with large numbers 
+  N <- sum(n)
+  A <- sum(alpha)
+  ##pdf <- gamma(A) / gamma(N + A) * prod(gamma(n + alpha) / gamma(alpha))
+  lpdf <- lgamma(A) - lgamma(N + A) + sum(lgamma(n + alpha) - lgamma(alpha))
+  pdf <- exp(lpdf)
+  if(log){
+    return(lpdf)
+  }else{
+    return(pdf)
+  }
+}
+
+## DIRICHLET-MULTINOMIAL NEGATIVE LOG-LIKELIHOOD
+dm.nll.o <- function(theta, Y, X, off){
+  ## note using ddm not ddm2
+  npar <- ncol(Y) *  ncol(X)
+  if(length(theta) != npar){
+    stop("Number of parameters supplied incorrect")
+  }
+  ##
+  beta <- matrix(theta, ncol = ncol(Y))
+  ## linear predictor
+  eta <- X %*% beta + log(off)
+  ## alphas
+  alpha <- exp(eta) ## see http://www2.math.su.se/matstat/reports/seriec/2014/rep6/report.pdf
+  ## log-likelihood
+  ## note doing this because ddm works on a vector not a matrix
+  nll <- - sum(sapply(1:nrow(Y), function(z){
+    ddm(n = Y[z,], alpha = alpha[z,], log = TRUE)
+  }))
+  return(nll)
+}
+
