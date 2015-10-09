@@ -21,7 +21,31 @@ eta <- X %*% beta
 (P <- exp(eta) / rowSums(exp(eta)))
 
 
+####################################################################################################################################
+##Expanded test fit
+##This is an extension of the first fit, this code allows for the addition or deletion of observations
+##Y1 <- cbind(rep(10, 6), rep(20, 6), rep(8, 6), rep(40, 6))
+Y1 <- cbind(rep(10, 120), rep(20, 120), rep(8, 120), rep(40, 120))
 
+##offset.mat <- cbind(rep(0.125, 6), rep(0.25, 6), rep(0.1, 6), rep(0.5, 6))
+offset.mat <- cbind(rep(0.125, 120), rep(0.25, 120), rep(0.1, 120), rep(0.5, 120))
+
+##Covariates
+x1 <- rnorm(nrow(Y1))
+x2 <- rnorm(nrow(Y1))
+X <- cbind(1, x1, x2)
+
+npar <- ncol(Y1) *  ncol(X)
+start.par <- rep(0, npar)
+
+fit2 <- optim(par = start.par, fn = dm.nll.o, Y = Y1, X = X, off = offset.mat, control = list(trace = 1, reltol=1e-16, abstol=1e-16), method = "BFGS")
+
+beta <- matrix(fit2$par, ncol = ncol(Y))
+eta <- X %*% beta
+
+p <- exp(eta)/rowSums(exp(eta))
+
+############################################################################################################################################################
 ## DIRICHLET-MULTINOMIAL PDF
 ddm <- function(n, alpha, log = FALSE){
   ## calculates pdf on log-scale
