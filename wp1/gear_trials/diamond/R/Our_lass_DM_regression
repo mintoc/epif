@@ -1,0 +1,159 @@
+library(MASS)
+library(gdata)
+library(ggplot2)
+library(MGLM)
+library(xlsx)
+
+require(xlsx)
+##set new path for loading data
+neph.dat <- read.xlsx("C:/Users/bburke/Desktop/GMIT/Gear Trials/Data/2015 BIM Nephrops quad rig trials/Our Lass 2 70_80_90_100mm codends Irish Sea July 2015/Nephrops Raised Counts Our Lass 2 Irish Sea July 2015.xlsx", sheetName="All hauls", header=TRUE, perl="C:\\Strawberry\\perl\\bin\\perl.exe")
+neph.dat$perl <- NULL
+neph.dat$Raised.count. <- NULL
+
+head(neph.dat)
+
+neph.dat$Mesh.Size <- paste("ms",neph.dat$Mesh.Size, sep="")
+neph.dat$SUBSRATIO<- 1/neph.dat$Overall.raising.factor
+
+##Dirichlet Model Functions
+###################################################################################################
+## DIRICHLET-MULTINOMIAL PDF
+ddm <- function(n, alpha, log = FALSE){
+  ## calculates pdf on log-scale
+  ## to deal with large numbers
+  ## http://www2.math.su.se/matstat/reports/seriec/2014/rep6/report.pdf
+  N <- sum(n)
+  lpdf <- lfactorial(N) - sum(lfactorial(n)) + lgamma(sum(alpha)) - lgamma(sum(alpha + n)) + sum(lgamma(alpha + n) - lgamma(alpha))
+  pdf <- exp(lpdf)
+  if(log){
+    return(lpdf)
+  }else{
+    return(pdf)
+  }
+}
+
+## DIRICHLET-MULTINOMIAL NEGATIVE LOG-LIKELIHOOD
+dm.nll.o <- function(theta, Y, X, off){
+  ## note using ddm not ddm2
+  npar <- ncol(Y) *  ncol(X)
+  if(length(theta) != npar){
+    stop("Number of parameters supplied incorrect")
+  }
+  ##
+  beta <- matrix(theta, ncol = ncol(Y))
+  ## linear predictor
+  eta <- X %*% beta + log(off)
+  ## alphas
+  alpha <- exp(eta) ## see http://www2.math.su.se/matstat/reports/seriec/2014/rep6/report.pdf
+  ## log-likelihood
+  ## note doing this because ddm works on a vector not a matrix
+  nll <- - sum(sapply(1:nrow(Y), function(z){
+    ddm(n = Y[z,], alpha = alpha[z,], log = TRUE)
+  }))
+  return(nll)
+}
+###########################################################################################
+
+vars2keep <- c("Haul.No", "Codend.No", "Mesh.Size", "Net.position", "Carapace.length", "Count", "SUBSRATIO","Total.catch")
+neph.melt <- melt(neph.dat[,vars2keep], id=c("Carapace.length", "Net.position", "Mesh.Size", "Haul.No", "Codend.No"))
+neph.cast <- cast(neph.melt, Haul.No + Carapace.length + Net.position + Codend.No ~ Mesh.Size + variable)
+
+neph.cast<-neph.cast[order(neph.cast$Haul.No),]
+
+##This revalues NA in the counts associated with different mesh sizes
+neph.cast$ms100mm_Count[is.na(neph.cast$ms100mm_Count )]<- 0
+neph.cast$ms70mm_Count[is.na(neph.cast$ms70mm_Count)]<- 0
+neph.cast$ms80mm_Count[is.na(neph.cast$ms80mm_Count)]<- 0
+neph.cast$ms90mm_Count[is.na(neph.cast$ms90mm_Count)]<- 0
+
+
+##This loop is used to fill in the Subsample column
+for(i in 1:dim(neph.cast)[1]){
+  haul.dat <- subset(neph.cast, Haul.No == neph.cast$Haul.No[i])
+  
+  if(is.na(neph.cast$ms100mm_SUBSRATIO[i])){
+    neph.cast$ms100mm_SUBSRATIO[i] <- unique(na.omit(haul.dat$ms100mm_SUBSRATIO))
+  }
+  
+  if(is.na(neph.cast$ms70mm_SUBSRATIO[i])){
+    neph.cast$ms70mm_SUBSRATIO[i] <- unique(na.omit(haul.dat$ms70mm_SUBSRATIO))
+  }
+  
+  if(is.na(neph.cast$ms80mm_SUBSRATIO[i])){
+    neph.cast$ms80mm_SUBSRATIO[i] <- unique(na.omit(haul.dat$ms80mm_SUBSRATIO))
+  }
+  
+  if(is.na(neph.cast$ms90mm_SUBSRATIO[i])){
+    neph.cast$ms90mm_SUBSRATIO[i] <- unique(na.omit(haul.dat$ms90mm_SUBSRATIO))
+  }
+}  
+
+##This loop is used to fill the Total.catch column for all nets
+for(i in 1:dim(neph.cast)[1]){
+  haul.dat <- subset(neph.cast, Haul.No == neph.cast$Haul.No[i])
+  
+  if(is.na(neph.cast$ms100mm_Total.catch[i])){
+    neph.cast$ms100mm_Total.catch[i] <- unique(na.omit(haul.dat$ms100mm_Total.catch))
+  }
+  
+  if(is.na(neph.cast$ms70mm_Total.catch[i])){
+    neph.cast$ms70mm_Total.catch[i] <- unique(na.omit(haul.dat$ms70mm_Total.catch))
+  }
+  
+  if(is.na(neph.cast$ms80mm_Total.catch[i])){
+    neph.cast$ms80mm_Total.catch[i] <- unique(na.omit(haul.dat$ms80mm_Total.catch))
+  }
+  
+  if(is.na(neph.cast$ms90mm_Total.catch[i])){
+    neph.cast$ms90mm_Total.catch[i] <- unique(na.omit(haul.dat$ms90mm_Total.catch))
+  }
+}  
+
+##Created Variables for Carapace Length
+ncl <- neph.cast$Carapace.length ##/ (2*sd( neph.cast$Carapace.length))
+ncl2 <- neph.cast$Carapace.length^2
+ncl3 <- neph.cast$Carapace.length^3
+
+##Created Variable for Weight
+catch <- with(neph.cast, cbind(ms100mm_Total.catch, ms90mm_Total.catch, ms80mm_Total.catch, ms70mm_Total.catch))
+
+##Set up model
+##Model 1 - Just carapace length
+dvar <- with(neph.cast, cbind(ms100mm_Count, ms90mm_Count, ms80mm_Count, ms70mm_Count))
+invar <- cbind(1, ncl) 
+offset.mat <- with(neph.cast, cbind(ms100mm_SUBSRATIO, ms90mm_SUBSRATIO, ms80mm_SUBSRATIO, ms70mm_SUBSRATIO))
+
+npar <- ncol(dvar) * ncol(invar)
+start.par <- rep(1,npar)
+
+##fit1 <- optim(par=start.par, Y=dvar, X=invar, off=offset.mat, fn=dm.nll.o, control = list(trace = 1, reltol=1e-16, abstol=1e-16), method="BFGS")
+fit1 <- optim(par=start.par, Y=dvar, X=invar, off=offset.mat, fn=dm.nll.o, control = list(trace = 1), method="BFGS")
+
+beta <- matrix(fit1$par, ncol=ncol(dvar))
+eta <- invar %*% beta
+
+p <- exp(eta)/rowSums(exp(eta))
+
+##Model 2 - Addition of Carapace length squared
+invar2 <- cbind(1, ncl, ncl2) 
+npar <- ncol(dvar) * ncol(invar2)
+start.par <- rep(0,npar)
+
+fit2 <- optim(par=start.par, Y=dvar, X=invar2, off=offset.mat, fn=dm.nll.o, control = list(trace=1, reltol=1e-16, abstol=1e-16), method="BFGS")
+
+beta2 <- matrix(fit2$par, ncol=ncol(dvar))
+eta <- invar2 %*% beta2
+
+p <- exp(eta)/rowSums(exp(eta))
+
+##Model 3 - Addition of Weight (no carapace length squared)
+invar3 <- cbind(1, ncl, catch)
+npar <- ncol(dvar)*ncol(invar3)
+start.par <- rep(0, npar)
+
+fit3 <- optim(par=start.par, Y=dvar, X=invar3, off=offset.mat, fn=dm.nll.o, control = list(trace=1, reltol=1e-16, abstol=1e-16), method="BFGS")
+
+beta3 <- matrix(fit3$par, ncol=ncol(dvar))
+eta <- invar3 %*% beta3
+
+p<- exp(eta)/rowSums(exp(eta))
