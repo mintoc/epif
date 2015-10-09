@@ -364,13 +364,17 @@ pred.netpos.df <- data.frame(
                     Net.position = unlist(pred.df[, 1:4]),
                     proportion = c(pred.netpos))
 
-ggplot(prop.mesh.df2, aes(x = Carapace.length, y = proportion, colour = Net.position)) + 
+ggplot(prop.mesh.df, aes(x = Carapace.length, y = proportion, colour = Net.position)) + 
   geom_point(alpha = 0.2, aes(size = log(count))) + 
 facet_wrap(~ Mesh.Size) + ylab("Proportion of Nephrops per cod-end") +
   ##scale_colour_manual(values=rainbow(4)) +
   geom_line(data = pred.netpos.df, aes(x = Carapace.length, y = proportion))
 
 @ 
+
+
+
+
 
 \bibliography{../../../../misc/epif_bibliography}
 \bibliographystyle{../../../../misc/cjfas}

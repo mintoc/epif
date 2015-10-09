@@ -643,7 +643,7 @@ plot.new()
 legend("center", legend = c("70mm", "80mm", NA, "Original (30.09mm)", "24mm mean", 
                    "27mm mean", "33mm mean"),
        lty = c(1,1,NA, 1:4),
-       col = c("darkblue", "red1", NA, rep("darkblue", 4)),
+       col = c("red1", "darkblue", NA, rep("darkblue", 4)),
        bty = "n"
        )
 

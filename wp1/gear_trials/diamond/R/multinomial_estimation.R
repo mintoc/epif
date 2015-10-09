@@ -126,7 +126,9 @@ abline(c(0,1))
 ##------
 ## ADMB
 ##------
-m <- 3
+library(MASS)
+## SIMULATE WITH EFFECTS
+m <- 4
 a <- rnorm((m-1)*(m)/2, sd = 1)
 
 L <- matrix(0, nrow = m - 1, ncol = m - 1)
@@ -142,10 +144,10 @@ for(i in 1:(m-1)){
 
 Sigma <- L%*%t(L)
 
-ngp <- 10
+ngp <- 20
 u0 <- mvrnorm(ngp, mu = rep(0, m-1), Sigma)
 u <- cbind(0, u0)
-nobspergp <- 20
+nobspergp <- 10
 n <- ngp * nobspergp
 
 X <- cbind(1, rnorm(n))
@@ -165,7 +167,7 @@ Y <- t(apply(P, 1, FUN = function(z){
 }))
 
 ## write the data out
-datfile <- "../admb/multinomial.dat"
+datfile <- "../admb/multinomial_re/multinomial.dat"
 cat("# number of observations n \n", nrow(Y), "\n", file = datfile)
 cat("# number of categories m \n", ncol(Y), "\n", file = datfile, append = TRUE)
 cat("# dimension of parameter vector p \n", ncol(X), "\n", file = datfile, append = TRUE)
@@ -177,85 +179,95 @@ write.table(X, file = datfile, append = TRUE, col.names = FALSE, row.names = FAL
 cat("# groups \n", gps, "\n", file = datfile, append = TRUE)
 
 ## pinfile
-datfile <- "../admb/multinomial.pin"
+datfile <- "../admb/multinomial_re/multinomial.pin"
 cat("# beta0 \n", file = datfile)
 write.table(beta0 * 0, file = datfile, append = TRUE, col.names = FALSE, row.names = FALSE)
-cat("# a \n", rep(0.1, length(a)), "\n", file = datfile, append = TRUE)
+cat("# a \n", rep(0.5, length(a)), "\n", file = datfile, append = TRUE)
 cat("# u0 \n", file = datfile, append = TRUE)
 write.table(u0 * 0, file = datfile, append = TRUE, col.names = FALSE, row.names = FALSE)
 
+admb.res <- read.table("../admb/multinomial_re/multinomial.std", header = TRUE)
 
-admb.res <- read.table("../admb/multinomial.std", header = TRUE)
+uhat.admb <- matrix(admb.res$value[admb.res$name == "u0"], ncol = m - 1, byrow = TRUE)
 
-uhat <- matrix(admb.res$value[admb.res$name == "u0"], ncol = m - 1, byrow = TRUE)
+plot(u0, uhat.admb)
+abline(c(0,1))
 
-plot(u0, uhat)
+## BINARY EXAMPLE fit
+library(lme4)
+(gm1 <- glmer(Y ~ -1 + X + (1 | factor(gps)),
+              family = binomial))
+
+test <- multinom(Y ~ -1 + X)
+
+logLik(gm1)
+
+plot(ranef(gm1)[[1]][,1], uhat)
 abline(c(0,1))
 
 
+##------
+## JAGS 
+##------
+## see: https://github.com/johnmyleswhite/JAGSExamples/blob/master/scripts/multinomial/multinomial.R
+# Basic inference.
+library(R2jags)
+
+n <- nrow(Y)
+k <- ncol(Y)
+p <- ncol(X)
+npar <- p * (m-1)
+R <- diag(k-1)
+
+# data
+jags.data <- list("Y", "k", "n", "X", "p", "gps", "ngp", "R")
+jags.params <- c("beta","sigma","u")
+
+jags.inits <- function(){
+  list("beta" = matrix(rnorm(npar), nrow = 2),
+       "tau" = rWishart(1, df = k, Sigma = diag(k-1))[,,1],
+       "u" = matrix(0,nrow = ngp, ncol = k-1)
+       )
+}
+
+jagsfit <- jags(data = jags.data,
+                inits = jags.inits,
+                jags.params,
+                n.iter = 1e4,
+                model.file = "../jags/multinomial.bug")
+
+plot(jagsfit)
+
+print(jagsfit)
+
+uhat.jags <- jagsfit$BUGSoutput$mean$u
+
+## PLOT THEM ALL
+true.df <- data.frame(method = "true",
+                      u = c(u0),
+                      k = rep(paste("u", 1:(m-1), sep = ""), each = ngp))
+
+true.df$index <- seq(1, nrow(true.df))
+
+admb.df <- data.frame(method = "admb",
+                      u = c(uhat.admb),
+                      k = rep(paste("u", 1:(m-1), sep = ""), each = ngp))
+admb.df$index <- seq(1, nrow(admb.df))
+
+jags.df <- data.frame(method = "jags",
+                      u = c(uhat.jags),
+                      k = rep(paste("u", 1:(m-1), sep = ""), each = ngp))
+jags.df$index <- seq(1, nrow(jags.df))
+
+all.df <- rbind(true.df, admb.df, jags.df)
+
+library(ggplot2)
+
+theme_set(theme_bw(base_size = 14))
+ggplot(all.df, aes(x = index, y = u)) + geom_point(aes(colour = method, pch = method), size = 3) + facet_wrap(~k, scales = "free")
 
 
-## BINARY EXAMPLE
-library(lme4)
-(gm1 <- glmer(cbind(incidence, size - incidence) ~ period + (1 | herd),
-              data = cbpp, family = binomial))
+plot(u0, ujags)
+abline(c(0,1))
 
 
-
-##(gm1 <- glm(cbind(incidence, size - incidence) ~ period,
-##            data = cbpp, family = binomial))
-
-
-Y <- with(cbpp, cbind(incidence, size - incidence))
-X <- model.matrix(gm1)
-gps <- cbpp$herd
-
-## write the data out
-## write the data out
-datfile <- "../admb/multinomial.dat"
-cat("# number of observations n \n", nrow(Y), "\n", file = datfile)
-cat("# number of categories m \n", ncol(Y), "\n", file = datfile, append = TRUE)
-cat("# dimension of parameter vector p \n", ncol(X), "\n", file = datfile, append = TRUE)
-cat("# number of groups ngp \n", length(unique(gps)), "\n", file = datfile, append = TRUE)
-cat("# response counts Y \n", file = datfile, append = TRUE)
-write.table(Y, file = datfile, append = TRUE, col.names = FALSE, row.names = FALSE)
-cat("# model/design matrix X \n", file = datfile, append = TRUE)
-write.table(X, file = datfile, append = TRUE, col.names = FALSE, row.names = FALSE)
-cat("# groups \n", gps, "\n", file = datfile, append = TRUE)
-
-
-
-##-----
-## TMB 
-##-----
-## NEXT STEP - FIT MULTINOMIAL IN TMB, NO RANDOM EFFECTS YET
-
-Y <- t(rmultinom(20, size = 20, prob = c(0.1, 0.3, 0.1, 0.5)))
-x1 <- rnorm(nrow(Y))
-x2 <- rnorm(nrow(Y))
-X <- cbind(1, x1, x2)
-
-## devtools::install_github("kaskr/adcomp", subdir = "TMB")
-library(TMB)
-
-compile("multinomial.cpp")               # Compile the C++ file
-
-dyn.load(dynlib("multinomial"))               # Dynamically link the C++ code
-## dyn.unload(dynlib("multinomial"))
-
-##f = MakeADFun(data=list(x=x), parameters=list(mu=0,sigma=1))
-
-f <- MakeADFun(data=list(Y= Y, X = X), parameters = list(theta = rep(1, 9)))
-
-
-
-f$fn(list(mu=1,sigma=1))          # Call TMB function value
-
--sum(dnorm(x,mean=1,sd=1,log=T))  # Verify that we get the same in R
-
-f$gr(list(mu=1,sigma=1))  # First order derivatives (w.r.t mu and sigma)
-
-f$he(list(mu=1,sigma=1))          # Second order derivatives, i.e. the Hessian matrix
-
-fit = nlminb(f$par,f$fn,f$gr,lower=c(-10,0.0),upper=c(10.0,10.0))
-print(fit)

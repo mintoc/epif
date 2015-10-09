@@ -1,0 +1,65 @@
+model
+{
+  ##---------------
+  ## FIXED EFFECTS
+  ##---------------
+  ## priors on vector
+  for(i in 1:p){
+    for(j in 1:(k-1)){
+      beta[i,j] ~ dnorm(0.0, 0.01)
+    }
+  }
+  ## zeros in first column
+  for(i in 1:p){
+    Beta[i,1] <- 0
+  }
+  for(i in 1:p){
+    for(j in 2:k){
+      Beta[i,j] <- beta[i,j-1]
+    }
+  }
+  ##----------------
+  ## RANDOM EFFECTS
+  ##----------------
+  ## inverse covariance matrix
+  tau ~ dwish(R[,],k-1)
+  sigma <- inverse(tau)
+  ## mean of random effects
+  for(i in 1:(k-1)){
+    mu[i] <- 0
+  }
+  ## random effects
+  for(i in 1:ngp){
+    u[i,1:(k-1)] ~ dmnorm(mu[],tau[,])
+  }
+  ## random effects matrix with zero out front
+  for(i in 1:n){
+    umat[i,1] <- 0
+  }
+  ## random effect matrix extended to full number of observations
+  for(i in 1:n){
+    for(j in 2:k){
+      umat[i,j] <- u[gps[i],j-1]
+    }
+  }
+  ##------------------
+  ## LINEAR PREDICTOR
+  ##------------------
+  eta <- X %*% Beta + umat
+  ##------------------------
+  ## PROBABILITY OF SUCCESS
+  ##------------------------
+  ## long-winded but exp not defined for vector
+  for(i in 1:n){
+    for(j in 1:k){
+      expeta[i,j] <- exp(eta[i,j])
+    }
+    P[i,1:k] <- expeta[i,1:k]/sum(expeta[i,1:k])
+  }
+  ##------------  
+  ## LIKELIHOOD
+  ##------------
+  for (i in 1:n){
+    Y[i,] ~ dmulti(P[i,], 20)
+  }
+}

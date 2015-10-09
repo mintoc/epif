@@ -1,18 +1,7 @@
 
 
-p <- colSums(Y)/sum(Y)
+bulk.vec <- unlist(bulk.cast[, -1])
+##cuts <- c(0, quantile(bulk.vec, c(1/3,2/3)), 2 * max(bulk.vec))
+cuts <- c(0, quantile(bulk.vec, c(0.5)), 2 * max(bulk.vec))
 
-opt.alpha <- function(theta){
-  alpha <- exp(theta)
-  sum((alpha / sum(alpha) - p)^2)
-}
-
-fit <- optim(par = rep(1, 4), fn = opt.alpha)
-
-alpha <- exp(fit$par)
-
-p <- colSums(Y)/sum(Y)
-
-
-
-
+unique(as.data.frame(apply(bulk.cast[,-1], 2, cut, breaks = cuts)))
