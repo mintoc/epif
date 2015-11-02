@@ -31,6 +31,7 @@ DM.fit$fitted
 ##The alternative DM functions written by Brian don't work unless as 
 ##the factorial function continuously to goes out of bounds 
 
+##load DM func from the source file or load them from the code at the bottom of this R file
 source("C:/Users/bburke/Documents/GitHub/epif/wp1/gear_trials/diamond/R/multi_funs.R")
 
 npar <- ncol(Y1) *  ncol(X)
@@ -140,3 +141,62 @@ alpha <- exp(eta)
 ##whether you use the alpha we calculate or the alpha from MGLM
 ##each function calculates the same log likelihoods
 ##Why the alpha's are being calculated incorrectly doesn't appear obvious to me
+
+###########################################################################################################################
+##########################Dirichlet Multinomial Function###################################################################
+ddm <- function(n, alpha, log = FALSE){
+  ## calculates pdf on log-scale
+  ## to deal with large numbers
+  ## http://www2.math.su.se/matstat/reports/seriec/2014/rep6/report.pdf
+  N <- sum(n)
+  lpdf <- lfactorial(N) - sum(lfactorial(n)) + lgamma(sum(alpha)) - lgamma(sum(alpha + n)) + sum(lgamma(alpha + n) - lgamma(alpha))
+  pdf <- exp(lpdf)
+  if(log){
+    return(lpdf)
+  }else{
+    return(pdf)
+  }
+}
+
+dm.nll <- function(theta, Y, X){
+  ## note using ddm not ddm2
+  npar <- ncol(Y) *  ncol(X)
+  if(length(theta) != npar){
+    stop("Number of parameters supplied incorrect")
+  }
+  ##
+  beta <- matrix(theta, ncol = ncol(Y))
+  ## linear predictor
+  eta <- X %*% beta ##+ log(off)
+  print(eta)
+  ## alphas
+  alpha <- exp(eta) ## see http://www2.math.su.se/matstat/reports/seriec/2014/rep6/report.pdf
+  ## log-likelihood
+  ## note doing this because ddm works on a vector not a matrix
+  nll <- - sum(sapply(1:nrow(Y), function(z){
+    ddm(n = Y[z,], alpha = alpha[z,], log = TRUE)
+  }))
+  ##print(nll)
+  return(nll)
+}
+
+dm.nll.o <- function(theta, Y, X, off){
+  ## note using ddm not ddm2
+  npar <- ncol(Y) *  ncol(X)
+  if(length(theta) != npar){
+    stop("Number of parameters supplied incorrect")
+  }
+  ##
+  beta <- matrix(theta, ncol = ncol(Y))
+  ## linear predictor
+  eta <- X %*% beta + log(off)
+  ## alphas
+  alpha <- exp(eta) ## see http://www2.math.su.se/matstat/reports/seriec/2014/rep6/report.pdf
+  ## log-likelihood
+  ## note doing this because ddm works on a vector not a matrix
+  nll <- - sum(sapply(1:nrow(Y), function(z){
+    ddm(n = Y[z,], alpha = alpha[z,], log = TRUE)
+  }))
+  ##print(nll)
+  return(nll)
+}
