@@ -14,6 +14,9 @@ class model_data : public ad_comm{
   data_vector gp;
   data_matrix Offset;
   int nchol;
+  data_int  npred;
+  data_matrix Xpred;
+  data_matrix Xcondpred;
   ~model_data();
   model_data(int argc,char * argv[]);
   friend class model_parameters;
@@ -69,6 +72,7 @@ private:
   param_matrix L;
   param_init_bounded_vector a;
   random_effects_matrix u0;
+  param_stddev_matrix etapred;
   param_number prior_function_value;
   param_number likelihood_function_value;
   objective_function_value  nll;
@@ -114,6 +118,7 @@ public:
   df1b2matrix L;
   df1b2_init_bounded_vector a;
   df1b2_init_matrix u0;
+  df1b2matrix etapred;
   df1b2variable prior_function_value;
   df1b2variable likelihood_function_value;
    // re_objective_function_value  nll;

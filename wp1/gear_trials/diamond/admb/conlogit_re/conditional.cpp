@@ -35,6 +35,13 @@ model_data::model_data(int argc,char * argv[]) : ad_comm(argc,argv)
  ofs << "gp" << endl << gp <<  endl;
   Offset.allocate(1,n,1,m,"Offset");
  ofs << "Offset" << endl << Offset <<  endl;
+ nchol = (m-1)*m/2;
+  npred.allocate("npred");
+ ofs << "npred" << endl << npred <<  endl;
+  Xpred.allocate(1,npred,1,p,"Xpred");
+ ofs << "Xpred" << endl << Xpred <<  endl;
+  Xcondpred.allocate(1,npred,1,q,"Xcondpred");
+ ofs << "Xcondpred" << endl << Xcondpred <<  endl;
 }
 
 model_parameters::model_parameters(int sz,int argc,char * argv[]) : 
@@ -43,13 +50,14 @@ model_parameters::model_parameters(int sz,int argc,char * argv[]) :
   model_parameters_ptr=this;
   initializationfunction();
   beta0.allocate(1,p,1,m-1,"beta0");
-  betacond.allocate(1,"betacond");
+  betacond.allocate("betacond");
   L.allocate(1,m-1,1,m-1,"L");
   #ifndef NO_AD_INITIALIZE
     L.initialize();
   #endif
-  a.allocate(1,m-1,-5.0,5.0,-1,"a");
-  u0.allocate(1,ngp,1,m-1,-1,"u0");
+  a.allocate(1,nchol,-5.0,5.0,3,"a");
+  u0.allocate(1,ngp,1,m-1,2,"u0");
+  etapred.allocate(1,npred,1,m,"etapred");
   prior_function_value.allocate("prior_function_value");
   likelihood_function_value.allocate("likelihood_function_value");
   nll.allocate("nll");  /* ADOBJECTIVEFUNCTION */
@@ -63,17 +71,17 @@ void model_parameters::userfunction(void)
   //----------------
   int k=1;
   for(int i=1;i<=(m-1);i++){
-    //for(int j=1;j<=i;j++){
-      //L(i,j) = a(k);
-      L(i,i) = a(k);
+    for(int j=1;j<=i;j++){
+      L(i,j) = a(k);
+      //L(i,i) = a(k);
       k++;
-    //}
+    }
   }
   dvar_matrix Sigma = L * trans(L);
   //cout << Sigma << endl << endl;
   // likelihood for the random effects - MVN 
   for (int i=1;i<=ngp;i++){
-    //nll += 0.5 * (log(2*M_PI) + ln_det(Sigma) + u0(i) * solve(Sigma,u0(i)));
+    nll += 0.5 * (log(2*M_PI) + ln_det(Sigma) + u0(i) * solve(Sigma,u0(i)));
   }
   //---------------
   // FIXED EFFECTS 
@@ -110,6 +118,17 @@ void model_parameters::userfunction(void)
   for (int i=1;i<=n;i++){
       //nll += nllMultiNomial(Y(i), P(i));
       nll += -1. * (Y(i) * log(P(i)) + gammln(sum(Y(i)) + 1.) - sum(gammln(Y(i) + 1.)));
+  }
+  // sd report
+  if (sd_phase())
+  {
+    dvar_matrix etapred0(1,npred,1,m-1);
+    for (int i=1;i<=npred;i++){
+      for (int j=1;j<=m-1;j++){
+        etapred0(i,j) = sum(elem_prod(Xpred(i),trans(beta0)(j)));
+      }
+    }
+    etapred =  etapred0 * etaconvert + betacond * Xcondpred;
   }
 }
   long int arrmblsize=0;
@@ -179,17 +198,17 @@ void df1b2_parameters::user_function(void)
   //----------------
   int k=1;
   for(int i=1;i<=(m-1);i++){
-    //for(int j=1;j<=i;j++){
-      //L(i,j) = a(k);
-      L(i,i) = a(k);
+    for(int j=1;j<=i;j++){
+      L(i,j) = a(k);
+      //L(i,i) = a(k);
       k++;
-    //}
+    }
   }
   df1b2matrix Sigma = L * trans(L);
   //cout << Sigma << endl << endl;
   // likelihood for the random effects - MVN 
   for (int i=1;i<=ngp;i++){
-    //nll += 0.5 * (log(2*M_PI) + ln_det(Sigma) + u0(i) * solve(Sigma,u0(i)));
+    nll += 0.5 * (log(2*M_PI) + ln_det(Sigma) + u0(i) * solve(Sigma,u0(i)));
   }
   //---------------
   // FIXED EFFECTS 
@@ -226,6 +245,17 @@ void df1b2_parameters::user_function(void)
   for (int i=1;i<=n;i++){
       //nll += nllMultiNomial(Y(i), P(i));
       nll += -1. * (Y(i) * log(P(i)) + gammln(sum(Y(i)) + 1.) - sum(gammln(Y(i) + 1.)));
+  }
+  // sd report
+  if (sd_phase())
+  {
+    df1b2matrix etapred0(1,npred,1,m-1);
+    for (int i=1;i<=npred;i++){
+      for (int j=1;j<=m-1;j++){
+        etapred0(i,j) = sum(elem_prod(Xpred(i),trans(beta0)(j)));
+      }
+    }
+    etapred =  etapred0 * etaconvert + betacond * Xcondpred;
   }
 }
    
@@ -274,13 +304,14 @@ void model_parameters::end_df1b2_funnel(void)
 void df1b2_parameters::allocate(void) 
 {
   beta0.allocate(1,p,1,m-1,"beta0");
-  betacond.allocate(1,"betacond");
+  betacond.allocate("betacond");
   L.allocate(1,m-1,1,m-1,"L");
   #ifndef NO_AD_INITIALIZE
     L.initialize();
   #endif
-  a.allocate(1,m-1,-5.0,5.0,-1,"a");
-  u0.allocate(1,ngp,1,m-1,-1,"u0");
+  a.allocate(1,nchol,-5.0,5.0,3,"a");
+  u0.allocate(1,ngp,1,m-1,2,"u0");
+  etapred.allocate(1,npred,1,m,"etapred");
   prior_function_value.allocate("prior_function_value");
   likelihood_function_value.allocate("likelihood_function_value");
   nll.allocate("nll");  /* ADOBJECTIVEFUNCTION */

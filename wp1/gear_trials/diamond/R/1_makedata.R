@@ -45,7 +45,7 @@ our.lass.neph.melt <- melt(our.lass.neph.dat[, vars2keep],
 
 ## re-form the dataframe in required format 
 our.lass.neph.cast <- cast(our.lass.neph.melt, Carapace.length + fHAUL ~ Mesh.Size  + variable)
-our.lass.neph.cast <- our.lass.neph.cast[order(our.lass.neph.cast$fHAUL, our.lass.neph.cast$Carapace.length), ]
+
 our.lass.neph.cast[is.na(our.lass.neph.cast)] <- 0
 
 ## check some
@@ -99,14 +99,9 @@ our.lass.neph.cast0 <- merge(our.lass.neph.cast, subs.cast, by = "fHAUL", all.x 
 
 our.lass.neph.cast1 <- merge(our.lass.neph.cast0, bulk.cast, by = "fHAUL", all.x = TRUE)
 
-our.lass.neph.cast1$logm70mm_Total.catch <- log(our.lass.neph.cast1$m70mm_Total.catch)
-our.lass.neph.cast1$logm80mm_Total.catch <- log(our.lass.neph.cast1$m80mm_Total.catch)
-our.lass.neph.cast1$logm90mm_Total.catch <- log(our.lass.neph.cast1$m90mm_Total.catch)
-our.lass.neph.cast1$logm100mm_Total.catch <- log(our.lass.neph.cast1$m100mm_Total.catch)
+our.lass.neph.cast <- merge(our.lass.neph.cast1, netpos.cast, by = "fHAUL", all.x = TRUE)
 
-our.lass.neph.cast2 <- merge(our.lass.neph.cast1, bulk.cast.diff, by = "fHAUL", all.x = TRUE)
-
-our.lass.neph.cast <- merge(our.lass.neph.cast2, netpos.cast, by = "fHAUL", all.x = TRUE)
+our.lass.neph.cast <- our.lass.neph.cast[order(our.lass.neph.cast$fHAUL, our.lass.neph.cast$Carapace.length),]
 
 ## show first few lines
 head(our.lass.neph.cast, 2)
@@ -130,9 +125,4 @@ offset.mat <- log(apply(subsratio.mat, 2, FUN =
                         function(zz){zz/subsratio.mat[,1]}))
 
 ## SAVE OBJECTS
-save(list = c("our.lass.neph.cast", "offset.mat", "neph.count.mat", "count.vars", "subsratio.vars"), file = "our_lass_data_objects.RData")
-
-
-
-
-
+save(list = c("our.lass.neph.cast", "offset.mat", "neph.count.mat", "count.vars", "subsratio.vars", "nc.vars"), file = "our_lass_data_objects.RData")

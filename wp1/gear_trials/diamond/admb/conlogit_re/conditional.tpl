@@ -25,20 +25,29 @@ DATA_SECTION
   init_matrix Offset(1,n,1,m)
   !! ofs << "Offset" << endl << Offset <<  endl;
   int nchol
-  !! nchol = (m-1)*m/2; 
+  !! nchol = (m-1)*m/2;
+  // predictions matrices
+  init_int npred
+  !! ofs << "npred" << endl << npred <<  endl;
+  init_matrix Xpred(1,npred,1,p)
+  !! ofs << "Xpred" << endl << Xpred <<  endl;
+  init_matrix Xcondpred(1,npred,1,q)
+  !! ofs << "Xcondpred" << endl << Xcondpred <<  endl;
 
 PARAMETER_SECTION
   // fixed effect coefficients
   init_matrix beta0(1,p,1,m-1);
   // conditional logit coefficient
-  init_number betacond(1); // only one implemented here
+  init_number betacond; // only one implemented here
   // random effects vcov
   matrix L(1,m-1,1,m-1) // Cholesky factor
   init_bounded_vector a(1,nchol,-5.0,5.0,3)   // Free parameters in C
-  //init_bounded_vector a(1,m-1,-5.0,5.0,3)   // Free parameters in C
-  //init_bounded_vector a(1,m-1,-5.0,5.0,-1)   // Free parameters in C
+  //init_bounded_vector a(1,nchol,-5.0,5.0,-1)   // Free parameters in C
+  // re
   random_effects_matrix u0(1,ngp,1,m-1,2)
   //random_effects_matrix u0(1,ngp,1,m-1,-1)
+  // predictions
+  sdreport_matrix etapred(1,npred,1,m);
   objective_function_value nll;
 
 PROCEDURE_SECTION
@@ -98,4 +107,16 @@ PROCEDURE_SECTION
   for (int i=1;i<=n;i++){
       //nll += nllMultiNomial(Y(i), P(i));
       nll += -1. * (Y(i) * log(P(i)) + gammln(sum(Y(i)) + 1.) - sum(gammln(Y(i) + 1.)));
+  }
+
+  // sd report
+  if (sd_phase())
+  {
+    dvar_matrix etapred0(1,npred,1,m-1);
+    for (int i=1;i<=npred;i++){
+      for (int j=1;j<=m-1;j++){
+        etapred0(i,j) = sum(elem_prod(Xpred(i),trans(beta0)(j)));
+      }
+    }
+    etapred =  etapred0 * etaconvert + betacond * Xcondpred;
   }
