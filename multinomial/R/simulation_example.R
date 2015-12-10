@@ -95,9 +95,9 @@ Xcondpred <- Xcond * 0
 
 npred <- nrow(Xpred)
 
-## send to admb
+## send to admbre
 ## write the data out
-datfile <- "../admb/multinomialme.dat"
+datfile <- "../admbre/multinomialme.dat"
 cat("# number of observations n \n", n, "\n", file = datfile)
 cat("# number of categories m \n", m, "\n", file = datfile, append = TRUE)
 cat("# dimension of parameter vector p \n", ncol(X), "\n", file = datfile, append = TRUE)
@@ -128,7 +128,7 @@ L.start[upper.tri(L.start)] <- NA
 a.start <- as.numeric(na.omit(c(t(L.start))))
 ##a.start <- rep(0.1, 3)
 
-pinfile <- "../admb/multinomialme.pin"
+pinfile <- "../admbre/multinomialme.pin"
 cat("# beta0 \n", file = pinfile)
 write.table(beta0.start, file = pinfile, append = TRUE, col.names = FALSE, row.names = FALSE)
 cat("# betacond \n", 0, "\n", file = pinfile, append = TRUE)
@@ -140,18 +140,18 @@ write.table(u0.start, file = pinfile, append = TRUE, col.names = FALSE, row.name
 
 
 
-## RUN THE MODEL IN ADMB - CODE BELOW WON'T WORK OTHERWISE
+## RUN THE MODEL IN ADMB-RE - CODE BELOW WON'T WORK OTHERWISE
 
 ## read in and plot the results
-coef.admb <- read.table("../admb/multinomialme.std", header = TRUE)
+coef.admbre <- read.table("../admbre/multinomialme.std", header = TRUE)
 
-uhat <- matrix(subset(coef.admb, name == "u0")$value, ncol = m-1, byrow = TRUE)
+uhat <- matrix(subset(coef.admbre, name == "u0")$value, ncol = m-1, byrow = TRUE)
 
 plot(u.mat0, uhat)
 abline(c(0, 1)) ## not very well recovered in this example
 
 ## Covariation matrix of the random effects
-a.hat <- subset(coef.admb, name == "a")$value
+a.hat <- subset(coef.admbre, name == "a")$value
 
 ii <- 1
 
@@ -168,7 +168,7 @@ sigma.hat <- L %*% t(L)
 plot(Sigma, sigma.hat); abline(c(0,1))
 
 ##
-beta.hat <- cbind(0, matrix(subset(coef.admb, name == "beta0")$value, nrow = ncol(X), byrow = TRUE))
+beta.hat <- cbind(0, matrix(subset(coef.admbre, name == "beta0")$value, nrow = ncol(X), byrow = TRUE))
 
 plot(beta.hat[, -1], beta[, -1])
 abline(c(0, 1))
