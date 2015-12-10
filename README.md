@@ -11,3 +11,6 @@ This work is gratefully funded by [an Bord Iascaigh Mhara (BIM) Ireland](http://
 Please submit an Issue with details of your comments 
 
 ### Folders
+
+## multinomial
+Contains R code for simulating and ADMB-RE code for fitting multinomial mixed effects models of use in quad-rig catch comparison trials
