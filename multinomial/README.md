@@ -10,13 +10,10 @@ Browne, D., Minto, C., Cosgrove, R., Burke, B., McDonald, D., Officer, R. and Ke
 ### Acknowledgements
 This work is gratefully funded by [an Bord Iascaigh Mhara (BIM) Ireland](http://www.bim.ie)
 
-### Support or Contact
-Please submit an Issue with details of your comments 
-
 ### Folders
 
-#### R
+##### R
 R code for simulating example datasets
 
-#### admbre
+##### admbre
 ADMB-RE code for fitting the model
