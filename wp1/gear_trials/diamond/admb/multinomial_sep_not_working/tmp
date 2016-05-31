@@ -1,9 +1,0 @@
-
-*** Parse: multinomial.tpl
-tpl2rem -debug multinomial
-
-*** Compile: multinomial.cpp
-g++ -c -g -I. -I"/usr/local/admb/include" -I"/usr/local/admb/contrib/include" -omultinomial.obj multinomial.cpp
-
-Error: Could not compile multinomial.cpp
-

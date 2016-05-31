@@ -1,6 +1,0 @@
-
-*** Parse: multinomial.tpl
-tpl2rem -debug multinomial
-
-Error: error.tpl not found
-
