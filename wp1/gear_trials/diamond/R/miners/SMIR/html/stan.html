@@ -1,0 +1,84 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head><title>R: Stanford Heart Transplantation Programme - 65 transplanted patients</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<link rel="stylesheet" type="text/css" href="../../R.css">
+</head><body>
+
+<table width="100%" summary="page for stan {SMIR}"><tr><td>stan {SMIR}</td><td align="right">R Documentation</td></tr></table>
+<h2>Stanford Heart Transplantation Programme - 65 transplanted patients</h2>
+
+
+<h3>Description</h3>
+
+<p>
+The file  contains the data on 65 transplanted patients,
+consisting of the patient's age at transplantation, prior
+open-heart surgery  (1 = yes, 0 = no), a censoring indicator
+(1 = yes, 0 = no), the survival time in days after
+transplant , a score representing the mismatch
+between the patient's and the donor's tissue type (values range from
+0.00 to 3.05), and an indicator for death by rejection (1 =
+yes, 0 = no).  One zero survival time is recoded to 0.5.  There are 41
+deaths and 24 censored survivals, with 39 distinct death times.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>stan</pre>
+
+
+<h3>Format</h3>
+
+<p>
+A data.frame of 65 obs. of 14 variables:
+<table summary="Rd table">
+<tr>
+  <td align="right">[,]  </td>  <td align="left">  birth.dt   </td>  <td align="left"> integer, </td>
+</tr>
+<tr>
+  <td align="right"> [,]  </td>  <td align="left">  accept.dt  </td>  <td align="left"> integer,   </td>
+</tr>
+<tr>
+  <td align="right"> [,]  </td>  <td align="left">  tx.date    </td>  <td align="left"> integer,   </td>
+</tr>
+<tr>
+  <td align="right"> [,]  </td>  <td align="left">  fu.date    </td>  <td align="left"> integer,   </td>
+</tr>
+<tr>
+  <td align="right"> [,]  </td>  <td align="left">  fustat     </td>  <td align="left"> integer,   </td>
+</tr>
+<tr>
+  <td align="right"> [,]  </td>  <td align="left">  surgery    </td>  <td align="left"> integer,   a score representing mismatch of tissue types</td>
+</tr>
+<tr>
+  <td align="right"> [,]  </td>  <td align="left">  age        </td>  <td align="left"> integer,   in years</td>
+</tr>
+<tr>
+  <td align="right"> [,]  </td>  <td align="left">  futime     </td>  <td align="left"> integer,   </td>
+</tr>
+<tr>
+  <td align="right"> [,]  </td>  <td align="left">  wait.time  </td>  <td align="left"> integer,   </td>
+</tr>
+<tr>
+  <td align="right"> [,]  </td>  <td align="left">  transplant </td>  <td align="left"> Factor w/ 2 levels "TRUE", "FALSE" </td>
+</tr>
+<tr>
+  <td align="right"> [,]  </td>  <td align="left">  mismatch   </td>  <td align="left"> integer,   NA NA 2 3 NA NA 4 NA NA 2 ...</td>
+</tr>
+<tr>
+  <td align="right"> [,]  </td>  <td align="left">  hla.a2     </td>  <td align="left"> integer,   NA NA 0 0 NA NA 0 NA NA 0 ...</td>
+</tr>
+<tr>
+  <td align="right"> [,]  </td>  <td align="left">  mscore     </td>  <td align="left"> numeric,   NA NA 1.11 1.66 NA NA 1.32 NA NA 0.61 ...</td>
+</tr>
+<tr>
+  <td align="right"> [,]  </td>  <td align="left">  reject     </td>  <td align="left"> integer,   NA NA 0 0 NA NA 1 NA NA 1 ... </td>
+</tr>
+</table>
+
+
+
+<hr><div align="center">[Package <em>SMIR</em> version 0.01 <a href="00Index.html">Index]</a></div>
+
+</body></html>

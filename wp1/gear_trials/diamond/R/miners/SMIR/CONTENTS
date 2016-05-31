@@ -1,0 +1,221 @@
+Entry: NPL.bands
+Aliases: NPL.bands simulation.envelope
+Keywords: distribution
+Description: Nonparametric likelihood confidence bands
+URL: ../../../library/SMIR/html/NPL.bands.html
+
+Entry: Obesity
+Aliases: Obesity
+Keywords: datasets
+Description: Obesity Data
+URL: ../../../library/SMIR/html/Obesity.html
+
+Entry: Oxboys
+Aliases: Oxboys
+Keywords: datasets
+Description: Oxford boys height data
+URL: ../../../library/SMIR/html/Oxboys.html
+
+Entry: Rsq
+Aliases: Rsq R2
+Keywords: 
+Description: Coefficient of determination, R-squared
+URL: ../../../library/SMIR/html/Rsq.html
+
+Entry: RsqCV
+Aliases: RsqCV R2CV rsqcv
+Keywords: regression
+Description: Cross-validated coefficient of determination
+URL: ../../../library/SMIR/html/RsqCV.html
+
+Entry: betablok
+Aliases: betablok
+Keywords: datasets
+Description: Beta-blockers for myocardial infarction
+URL: ../../../library/SMIR/html/betablok.html
+
+Entry: bronchitis
+Aliases: bronchit
+Keywords: datasets
+Description: Chronic bronchitis in a sample of mean in Cardiff
+URL: ../../../library/SMIR/html/bronchitis.html
+
+Entry: byssinosis
+Aliases: byssinosis
+Keywords: datasets
+Description: Byssinosis in the cotton industry
+URL: ../../../library/SMIR/html/byssinosis.html
+
+Entry: cars
+Aliases: cars
+Keywords: datasets
+Description: Performance data for cars from Motor Trend magazine
+URL: ../../../library/SMIR/html/cars.html
+
+Entry: chd
+Aliases: chd
+Keywords: datasets
+Description: Coronary heart disease
+URL: ../../../library/SMIR/html/chd.html
+
+Entry: claims
+Aliases: claims
+Keywords: datasets
+Description: Insurance claims data
+URL: ../../../library/SMIR/html/claims.html
+
+Entry: coxph.disparity.R
+Aliases: coxph.disparity
+Keywords: survival
+Description: Check disparity in a Cox Proportional Hazard Model
+URL: ../../../library/SMIR/html/coxph.disparity.html
+
+Entry: disparity
+Aliases: disparity disparity.lm disparity.glm
+Keywords: 
+Description: Disparity of a fitted model
+URL: ../../../library/SMIR/html/disparity.html
+
+Entry: faults
+Aliases: fabric faults
+Keywords: datasets
+Description: Faults in rolls of material
+URL: ../../../library/SMIR/html/faults.html
+
+Entry: feigl
+Aliases: feigl
+Keywords: datasets
+Description: Leukaemia survival times -- Feigl & Zelen
+URL: ../../../library/SMIR/html/feigl.html
+
+Entry: gehan
+Aliases: gehan
+Keywords: survival
+Description: Remission times of acute leukemia patients -- Gehan et al
+URL: ../../../library/SMIR/html/gehan.html
+
+Entry: ghq
+Aliases: ghq
+Keywords: datasets
+Description: Psychiatric diagnosis based on GHQ
+URL: ../../../library/SMIR/html/ghq.html
+
+Entry: hostility
+Aliases: hostility
+Keywords: datasets
+Description: Bennett's hostility data
+URL: ../../../library/SMIR/html/hostility.html
+
+Entry: insult
+Aliases: insult
+Keywords: datasets
+Description: Effects of unprovoked verbal attack
+URL: ../../../library/SMIR/html/insult.html
+
+Entry: lsat
+Aliases: lsat
+Keywords: datasets
+Description: LSAT
+URL: ../../../library/SMIR/html/lsat.html
+
+Entry: miners
+Aliases: miners
+Keywords: datasets
+Description: Pneumoconiosis in coal miners
+URL: ../../../library/SMIR/html/miners.html
+
+Entry: poison
+Aliases: poison
+Keywords: datasets
+Description: Box Cox Poison Dataset
+URL: ../../../library/SMIR/html/poison.html
+
+Entry: prentice
+Aliases: prentice
+Keywords: datasets
+Description: Veteran's Administration Lung Cancer Trial
+URL: ../../../library/SMIR/html/prentice.html
+
+Entry: solv
+Aliases: solve solv
+Keywords: datasets
+Description: Children's block design test
+URL: ../../../library/SMIR/html/solv.html
+
+Entry: stackloss
+Aliases: stackloss
+Keywords: datasets
+Description: The Brownlee stackloss data
+URL: ../../../library/SMIR/html/stackloss.html
+
+Entry: stan
+Aliases: stan
+Keywords: datasets
+Description: Stanford Heart Transplantation Programme - 65 transplanted patients
+URL: ../../../library/SMIR/html/stan.html
+
+Entry: stanford
+Aliases: stanford
+Keywords: datasets
+Description: Stanford Heart Transplantation Programme - 103 patients
+URL: ../../../library/SMIR/html/stanford.html
+
+Entry: statlab
+Aliases: statlab
+Keywords: datasets
+Description: STATLAB census data
+URL: ../../../library/SMIR/html/statlab.html
+
+Entry: summary.treg
+Aliases: summary.treg summary
+Keywords: robust
+Description: Summarizing t-regression model fits
+URL: ../../../library/SMIR/html/summary.treg.html
+
+Entry: toxaemia
+Aliases: toxaemia
+Keywords: datasets
+Description: Bradford toxaemia data
+URL: ../../../library/SMIR/html/toxaemia.html
+
+Entry: toxoplas
+Aliases: toxoplas
+Keywords: datasets
+Description: Toxoplasmosis in El Salvador
+URL: ../../../library/SMIR/html/toxoplas.html
+
+Entry: trees
+Aliases: trees
+Keywords: datasets
+Description: The Minitab cherry tree data
+URL: ../../../library/SMIR/html/trees.html
+
+Entry: treg
+Aliases: treg
+Keywords: robust
+Description: t-regression model fit
+URL: ../../../library/SMIR/html/treg.html
+
+Entry: trypanos
+Aliases: trypanos
+Keywords: datasets
+Description: Trypanosome death data
+URL: ../../../library/SMIR/html/trypanos.html
+
+Entry: vaso
+Aliases: vaso
+Keywords: datasets
+Description: Gilliatt's vaso-constriction data
+URL: ../../../library/SMIR/html/vaso.html
+
+Entry: vietnam
+Aliases: vietnam
+Keywords: datasets
+Description: University of North Carolina Vietnam War Student Survey
+URL: ../../../library/SMIR/html/vietnam.html
+
+Entry: woolson
+Aliases: woolson
+Keywords: datasets
+Description: Woolson and Clarke's Obesity Study
+URL: ../../../library/SMIR/html/woolson.html

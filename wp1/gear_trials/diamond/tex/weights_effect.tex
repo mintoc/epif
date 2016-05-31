@@ -1,0 +1,28 @@
+\documentclass[a4paper,10pt]{article}
+\usepackage[utf8x]{inputenc}
+\usepackage{amsmath}
+%opening
+\title{Effect of weights on cod-end retention}
+\author{C. Minto}
+
+\begin{document}
+
+\maketitle
+
+Take a two net case
+
+\begin{align}
+\boldsymbol{\eta} &= \boldsymbol{X \beta} + \boldsymbol{W \gamma}\\
+\begin{pmatrix}\eta_0 & \eta_1 \end{pmatrix} &= (1) \begin{pmatrix}0 & \beta_0 \end{pmatrix} + \begin{pmatrix} w_0 & w_1 \end{pmatrix} \begin{pmatrix}\gamma_0 & 0 \\ 0 & \gamma_1 \end{pmatrix} \\
+\begin{pmatrix}\eta_0 & \eta_1 \end{pmatrix} &= \begin{pmatrix}0 & \beta_0 \end{pmatrix} + \begin{pmatrix} w_0 \gamma_0 & w_1 \gamma_1 \end{pmatrix} \\
+\begin{pmatrix}\eta_0 & \eta_1 \end{pmatrix} &= \begin{pmatrix} w_0 \gamma_0 & \beta_0 + w_1 \gamma_1\end{pmatrix}
+\end{align}
+
+So that
+
+\begin{align}
+ p_0 &= \frac{e^{w_0 \gamma_0}}{e^{w_0 \gamma_0} + e^{\beta_0 + w_1 \gamma_1}} \\
+ p_1 &= \frac{e^{\beta_0 + w_1 \gamma_1}}{e^{w_0 \gamma_0} + e^{\beta_0 + w_1 \gamma_1}}
+\end{align}
+
+\end{document}

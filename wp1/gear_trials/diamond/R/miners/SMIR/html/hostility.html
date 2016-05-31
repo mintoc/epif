@@ -1,0 +1,63 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head><title>R: Bennett's hostility data</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<link rel="stylesheet" type="text/css" href="../../R.css">
+</head><body>
+
+<table width="100%" summary="page for hostility {SMIR}"><tr><td>hostility {SMIR}</td><td align="right">R Documentation</td></tr></table>
+<h2>Bennett's hostility data</h2>
+
+
+<h3>Description</h3>
+
+<p>
+A measure of hostility based on word use exhibiting hostility by
+husbands of wives who had been admitted to hospital after suicide
+attempts by taking drug overdoses compared to a ``control'' group of husbands.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>data(hostility)</pre>
+
+
+<h3>Format</h3>
+
+<p>
+A data frame with 67 observations on the following 10 variables.
+<dl>
+<dt><code>group</code></dt><dd>a numeric vector</dd>
+<dt><code>nationality</code></dt><dd>a numeric vector</dd>
+<dt><code>po</code></dt><dd>a factor with levels <code>none</code> <code>previous</code></dd>
+<dt><code>in.host</code></dt><dd>a numeric vector</dd>
+<dt><code>amb.host</code></dt><dd>a numeric vector</dd>
+<dt><code>out.host</code></dt><dd>a numeric vector</dd>
+<dt><code>covert.host</code></dt><dd>a numeric vector</dd>
+<dt><code>positivity</code></dt><dd>a numeric vector</dd>
+<dt><code>g</code></dt><dd>a factor with levels <code>overdoses</code> <code>F controls</code> <code>T controls</code></dd>
+<dt><code>nation</code></dt><dd>a factor with levels <code>Australian</code> <code>British</code></dd>
+</dl>
+
+<h3>Source</h3>
+
+<p>
+Bennett, M. D. (1974). <EM>The emotional response of husbands to suicide
+attempts by their wives</EM>, Sydney University,
+Unpublished MD thesis.
+</p>
+
+
+<h3>Examples</h3>
+
+<pre>
+data(hostility)
+## maybe str(hostility)
+plot(hostility)
+</pre>
+
+
+
+<hr><div align="center">[Package <em>SMIR</em> version 0.01 <a href="00Index.html">Index]</a></div>
+
+</body></html>

@@ -1,0 +1,75 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head><title>R: Veteran's Administration Lung Cancer Trial</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<link rel="stylesheet" type="text/css" href="../../R.css">
+</head><body>
+
+<table width="100%" summary="page for prentice {SMIR}"><tr><td>prentice {SMIR}</td><td align="right">R Documentation</td></tr></table>
+<h2>Veteran's Administration Lung Cancer Trial</h2>
+
+
+<h3>Description</h3>
+
+<p>
+The file consists of survival times  in days of 137 lung cancer patients
+from a Veteran's Administration Lung Cancer trial, together with
+explanatory variables: performance status, a measure of
+general medical status on a continuous scale 1&ndash;9.9, with 1&ndash;3
+completely hospitalized, 4&ndash;6 partial confinement to hospital, 7&ndash;9.9
+able to care for self; age in years; time in months from
+diagnosis to starting on the study; a factor prior therapy
+(1 no, 2 yes); a factor treatment  (1 standard,
+2 test) and a factor tumour type (1 squamous, 2 small, 3
+adeno, 4 large).  There are three censored observations.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>prentice</pre>
+
+
+<h3>Format</h3>
+
+<p>
+A data.frame of 137 obs. of 8 variables:
+<table summary="Rd table">
+<tr>
+  <td align="right">[,1] </td>  <td align="left">  treat </td>  <td align="left">  integer, 1= standard, 2= test</td>
+</tr>
+<tr>
+  <td align="right"> [,2] </td>  <td align="left">  type  </td>  <td align="left">  integer,  1= squamous, 2 =small, 3= adeno, 4= large</td>
+</tr>
+<tr>
+  <td align="right"> [,3] </td>  <td align="left">  time  </td>  <td align="left">  integer,  survival time in days </td>
+</tr>
+<tr>
+  <td align="right"> [,4] </td>  <td align="left">  censor</td>  <td align="left">  integer,  censoring indicator </td>
+</tr>
+<tr>
+  <td align="right"> [,5] </td>  <td align="left">  status</td>  <td align="left">  integer,  general medical status on a scale 1&ndash;9.9 </td>
+</tr>
+<tr>
+  <td align="right"> [,6] </td>  <td align="left">  mfd   </td>  <td align="left">  integer,  time in months from diagnosis </td>
+</tr>
+<tr>
+  <td align="right"> [,7] </td>  <td align="left">  age   </td>  <td align="left">  integer,  age in years </td>
+</tr>
+<tr>
+  <td align="right"> [,8] </td>  <td align="left">  prior </td>  <td align="left">  integer,  prior therapy 1=no, 2=yes </td>
+</tr>
+</table>
+
+
+<h3>Source</h3>
+
+<p>
+Prentice, R. L. (1973), "Exponential survivals with censoring
+and explanatory variables", <EM>Biometrika</EM>, <B>60</B>, 279&ndash;88.
+</p>
+
+
+
+<hr><div align="center">[Package <em>SMIR</em> version 0.01 <a href="00Index.html">Index]</a></div>
+
+</body></html>

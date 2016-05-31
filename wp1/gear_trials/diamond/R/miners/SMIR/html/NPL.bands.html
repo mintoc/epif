@@ -1,0 +1,100 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head><title>R: Nonparametric likelihood confidence bands</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<link rel="stylesheet" type="text/css" href="../../R.css">
+</head><body>
+
+<table width="100%" summary="page for NPL.bands {SMIR}"><tr><td>NPL.bands {SMIR}</td><td align="right">R Documentation</td></tr></table>
+<h2>Nonparametric likelihood confidence bands</h2>
+
+
+<h3>Description</h3>
+
+<p>
+Computes the confidence bands for the empirical
+distribution  function as described by Owen, A. (1997) <EM>JASA</EM> <B>90</B>:516&ndash;521.
+</p>
+
+
+<h3>Usage</h3>
+
+<pre>NPL.bands(x,conf.level)</pre>
+
+
+<h3>Arguments</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>x</code></td>
+<td>
+a numeric vector</td></tr>
+<tr valign="top"><td><code>conf.level</code></td>
+<td>
+Either 0.95 (default) or 0.99</td></tr>
+</table>
+
+<h3>Value</h3>
+
+<table summary="R argblock">
+<tr valign="top"><td><code>x</code></td>
+<td>
+The unique values of x</td></tr>
+<tr valign="top"><td><code>lower</code></td>
+<td>
+The lower bound</td></tr>
+<tr valign="top"><td><code>upper</code></td>
+<td>
+The upper bound</td></tr>
+</table>
+
+<h3>Author(s)</h3>
+
+<p>
+<a href="mailto:ross.darnell@csiro.au">ross.darnell@csiro.au</a>
+</p>
+
+
+<h3>Examples</h3>
+
+<pre>
+### Empirical distribution of a gamma variable
+### and comparing to a normal 
+library(lattice)
+y &lt;- round(rgamma(100,shape=1.4,scale=20))
+meany &lt;- mean(y)
+sdy &lt;- sd(y)
+print(xyplot(qnorm(lower)+qnorm(upper)~x,data=NPL.bands(y),
+panel=function(x,y,...){
+panel.xyplot(x,y,...)
+panel.curve(qnorm(pnorm(x,mean=meany,sd=sdy)))}))
+### and for a larger sample
+yy &lt;- round(rgamma(1000,shape=1.4,scale=20))
+meanyy &lt;- mean(yy)
+sdyy &lt;- sd(yy)
+print(xyplot(qnorm(lower)+qnorm(upper)~x,data=NPL.bands(yy),
+panel=function(x,y,...){
+panel.xyplot(x,y,...)
+panel.curve(qnorm(pnorm(x,mean=meanyy,sd=sdyy)))}))
+###  and for a t-distributed variable with df=10
+yyy &lt;- round(rt(1000,df=10),1)
+meanyyy &lt;- mean(yyy)
+sdyyy &lt;- sd(yyy)
+print(xyplot(qnorm(lower)+qnorm(upper)~x,data=NPL.bands(yyy),
+panel=function(x,y,...){
+panel.xyplot(x,y,...)
+panel.curve(qnorm(pnorm(x,mean=meanyyy,sd=sdyyy)))}))
+###  and for a mixture of t-distributed variables with df=5
+yyyy &lt;- round(c(rt(100,df=5)*5+20,rt(100,df=5)*5+40))
+meanyyyy &lt;- mean(yyyy)
+sdyyyy &lt;- sd(yyyy)
+print(xyplot(qnorm(lower)+qnorm(upper)~x,data=NPL.bands(yyyy),
+panel=function(x,y,...){
+panel.xyplot(x,y,...)
+panel.curve(qnorm(pnorm(x,mean=meanyyyy,sd=sdyyyy)))}))
+#
+</pre>
+
+
+
+<hr><div align="center">[Package <em>SMIR</em> version 0.01 <a href="00Index.html">Index]</a></div>
+
+</body></html>

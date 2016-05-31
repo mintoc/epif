@@ -1,0 +1,38 @@
+;; This buffer is for notes you don't want to save, and for Lisp evaluation.
+;; If you want to create a file, visit that file with C-x C-f,
+;; then enter the text in that file's own buffer.
+
+
+
+Included continuous line numbers for ease of reference in the responses
+
+The parameters pertain to the odds ratios relative to the 70mm. The
+baseline position is the port outside position and implies that at
+mean weight and mean carapace length, similar proportions are found
+across the cod-ends in the port outside position (Table 3). Port
+inside effect is significantly negative (Table 3) implying a lower
+fishing power for this position in this trial, this can be seen in
+Figure 7 where whichever cod-end fished in the port inside position
+had a lower proportions retained compared to that cod-end in other
+positions. The starboard inside position was not significantly
+different to the port outside (Table 3), whereas the starboard outside
+have a smaller but significantly higher retention compared to the port
+outside (Table 3). The slopes over carapace length increased relative
+to the baseline (port outside) in both the port inside and starboard
+outside positions (Table 3, Figure 7). The effects of cod end weight
+are interpreted with carapace length also: with increasing weight, the
+70mm retains increasing proportion of smaller Nephrops and decreasing
+proportions of larger Nephrops. The 80mm had non-significant effects
+of weight on baseline proportions and proportions retained over
+carapace length. The 90mm net had increasing proportions retained with
+increasing weight (Table 3). Note additional model fitting could be
+used to removed non-significant parameters in the scope of an effect,
+as elaborated on in the Discussion.
+
+
+Based on the standard errors of the carapace length effects for the port outside only the 80/70 has a significant slope for the port outside position imply that only the
+
+
+
+
+

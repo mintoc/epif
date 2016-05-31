@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 auto-save-list
 custom.el
 url/
@@ -19,3 +20,36 @@ emacs-config.el
 *.out
 *.aux
 wp1/gear_trials/tex
+=======
+*.cpp
+*.log
+*.obj
+*.cpp
+*.htp
+*.so
+*.o
+multinomialme
+*~
+*.cov
+*.hes
+f1b2list1
+f1b2list12
+f1b2list13
+multinomialme.b01
+multinomialme.b02
+multinomialme.bar
+multinomialme.cor
+multinomialme.eva
+multinomialme.p01
+multinomialme.p02
+multinomialme.par
+multinomialme.std
+nf1b2list1
+nf1b2list12
+nf1b2list13
+f1b2list12
+f1b2list13
+f1b2list1
+variance
+admodel.dep
+>>>>>>> 60b0de02f69001a1a936f345e9b1e8595dd66147

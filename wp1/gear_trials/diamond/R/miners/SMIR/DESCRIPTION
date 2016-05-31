@@ -1,0 +1,18 @@
+Package: SMIR
+Type: Package
+Title: Companion to \emph{Statistical Modelling in R}
+Version: 0.01
+Date: 2009-2-10
+Author: Murray Aitkin, Brian Francis, John Hinde, Ross Darnell
+        <ross.darnell@csiro.au>
+Maintainer: Ross Darnell <ross.darnell@csiro.au>
+Depends: R (>= 2.6.0),
+Suggests: lattice, foreign, gdata, car, dglm, gnm, MASS, npmlreg,
+        survival
+LazyLoad: no
+LazyData: no
+Description: This package accompanies Aitkin et al, Statistical
+        Modelling in R, OUP, 2009. The package contains some functions
+        and datasets used in the text.
+License: GPL (>= 2)
+Built: R 2.8.0; ; 2009-03-09 18:03:01; windows

@@ -8,7 +8,7 @@ library(gdata)
 ##----------
 ## OUR LASS 
 ##----------
-our.lass.neph.dat <- read.xls("../data//2015 BIM Nephrops quad rig trials/Our Lass 2 70_80_90_100mm codends Irish Sea July 2015/Nephrops Raised Counts Our Lass 2 Irish Sea July 2015.xlsx", 
+our.lass.neph.dat <- read.xls("../data/2015 BIM Nephrops quad rig trials/Our Lass 2 70_80_90_100mm codends Irish Sea July 2015/Nephrops Raised Counts Our Lass 2 Irish Sea July 2015.xlsx", 
                               sheet = "All hauls",
                               stringsAsFactors = FALSE)
 
@@ -41,7 +41,7 @@ vars2keep <- c("Mesh.Size", "Carapace.length", "fHAUL", "Count")
 
 ## melt the data frame
 our.lass.neph.melt <- melt(our.lass.neph.dat[, vars2keep], 
-                  id = c("Mesh.Size", "Carapace.length", "fHAUL"))
+                           id = c("Mesh.Size", "Carapace.length", "fHAUL"))
 
 ## re-form the dataframe in required format 
 our.lass.neph.cast <- cast(our.lass.neph.melt, Carapace.length + fHAUL ~ Mesh.Size  + variable)
@@ -50,12 +50,12 @@ our.lass.neph.cast[is.na(our.lass.neph.cast)] <- 0
 
 ## check some
 our.lass.neph.cast[our.lass.neph.cast$Carapace.length == 26 &
-                   our.lass.neph.cast$fHAUL == "H10", "m70mm_Count"]
+                     our.lass.neph.cast$fHAUL == "H10", "m70mm_Count"]
 
 subset(our.lass.neph.dat,
        Mesh.Size == "m70mm" &
-       Carapace.length == 26 &
-       fHAUL == "H10")
+         Carapace.length == 26 &
+         fHAUL == "H10")
 
 ## show the first few rows
 head(our.lass.neph.cast, 2)
@@ -77,8 +77,8 @@ subs.cast[subs.cast$fHAUL == "H1", "m70mm_SUBSRATIO"]
 
 subset(our.lass.neph.dat,
        Mesh.Size == "m70mm" &
-       Carapace.length == 26 &
-       fHAUL == "H1")
+         Carapace.length == 26 &
+         fHAUL == "H1")
 
 ## get net position of each
 vars2keep <- c("Mesh.Size", "fHAUL", "Net.position")
@@ -110,6 +110,18 @@ head(our.lass.neph.cast, 2)
 nc.vars <- c("m70mm_Net.position", "m80mm_Net.position", "m90mm_Net.position", "m100mm_Net.position")
 our.lass.neph.cast$netconfig <- factor(paste("NC", apply(our.lass.neph.cast[, nc.vars], 1, paste, collapse = ""), sep =""))
 
+###Position matrices
+
+net.names <- c("m70mm_Net.position", "m80mm_Net.position", "m90mm_Net.position", "m100mm_Net.position")
+
+PO <- (our.lass.neph.cast[,net.names] == 1) * 1
+PI <- (our.lass.neph.cast[,net.names] == 2) * 1
+SI <- (our.lass.neph.cast[,net.names] == 3) * 1
+SO <- (our.lass.neph.cast[,net.names] == 4) * 1
+
+colnames(PO) <- colnames(PI) <- colnames(SI) <- colnames(SO) <- NULL
+rownames(PO) <- rownames(PI) <- rownames(SI) <- rownames(SO) <- NULL
+
 ## Extract the matrix of counts
 count.vars <- c("m70mm_Count", "m80mm_Count", "m90mm_Count", "m100mm_Count")
 
@@ -122,7 +134,7 @@ subsratio.mat <- as.matrix(our.lass.neph.cast[, subsratio.vars])
 
 ## Create the offset (NEED TO CHECK THIS)
 offset.mat <- log(apply(subsratio.mat, 2, FUN = 
-                        function(zz){zz/subsratio.mat[,1]}))
+                          function(zz){zz/subsratio.mat[,1]}))
 
 ## SAVE OBJECTS
-save(list = c("our.lass.neph.cast", "offset.mat", "neph.count.mat", "count.vars", "subsratio.vars", "nc.vars"), file = "our_lass_data_objects.RData")
+save(list = c("our.lass.neph.cast", "offset.mat", "neph.count.mat", "count.vars", "subsratio.vars", "nc.vars", "PO", "PI", "SI", "SO"), file = "our_lass_data_objects.RData")

@@ -1,0 +1,362 @@
+%% knit("Foyle_Fisher_t90_modelling.Rnw")
+
+\documentclass[12pt]{article}
+\usepackage{times}
+\usepackage{hyperref}
+\usepackage{natbib}
+\hypersetup{pdfpagemode=UseNone} % don't show bookmarks on initial view
+\hypersetup{colorlinks, urlcolor={blue}}
+
+% revise margins
+\setlength{\headheight}{0.0in}
+\setlength{\topmargin}{0.0in}
+\setlength{\headsep}{0.0in}
+\setlength{\textheight}{8.65in}
+\setlength{\footskip}{0.35in}
+\setlength{\oddsidemargin}{0.0in}
+\setlength{\evensidemargin}{0.0in}
+\setlength{\textwidth}{6.5in}
+
+\setlength{\parskip}{6pt}
+\setlength{\parindent}{0pt}
+
+\title{Preliminary analysis of the \emph{Foyle Fisher} T90 trial data}
+\author{For discussion}
+\date{}
+
+\begin{document}
+
+<<echo=FALSE>>=
+library(knitr)
+opts_chunk$set(size="footnotesize")
+## set the working directory
+##setwd('../tex'); 
+@
+
+\maketitle
+
+\section{Data}
+
+<<eval = TRUE>>=
+library(gdata) ## convert to xlsx
+## read in the Foyle Fisher data
+ff.dat <- read.xls("../data/Foyle Fisher T90 Trial_edited.xlsx", 
+                   sheet = "Lengths",
+                   stringsAsFactors = FALSE)
+## Change some names that have spaces
+names(ff.dat)[names(ff.dat) == "Port...Starboard"] <- "Port.Starboard"
+names(ff.dat)[names(ff.dat) == "Control...Experimental"] <- "Control.Experimental"
+names(ff.dat)[names(ff.dat) == "Length..cm."] <- "Length.cm"
+names(ff.dat)[names(ff.dat) == "Haul.No."] <- "Haul.No"
+
+## subset out valid hauls
+ff.dat <- subset(ff.dat, Haul.No %in% c(2,3, 6:13, 15:18))
+
+## order the data by haul number, species and length class
+ff.dat <- ff.dat[with(ff.dat, order(Haul.No, Species, Length.cm)),]
+
+## get the subsratio
+ff.dat$SUBSRATIO <- with(ff.dat, Weight.of.Fish.Measured / Total.Weight)
+## not needed generally but it read in ultra small differences
+ff.dat$SUBSRATIO <- round(ff.dat$SUBSRATIO, 10) 
+
+## Net position
+ff.dat$Net.position <- NA
+ff.dat$Net.position[ff.dat$Control.Experimental == "T90 80 mm" & 
+               ff.dat$Haul.No %in% c(2,3,10:13)] <- "Port"
+ff.dat$Net.position[ff.dat$Control.Experimental == "Diamond 80 mm" & 
+               ff.dat$Haul.No %in% c(2,3,10:13)] <- "Starboard"
+ff.dat$Net.position[ff.dat$Control.Experimental == "T90 80 mm" & 
+               ff.dat$Haul.No %in% c(6:9, 15:18)] <- "Starboard"
+ff.dat$Net.position[ff.dat$Control.Experimental == "Diamond 80 mm" & 
+               ff.dat$Haul.No %in% c(6:9, 15:18)] <- "Port"
+
+## subset by species
+plaice.dat <- subset(ff.dat, Species == "Plaice")
+whit.dat <- subset(ff.dat, Species == "Whiting")
+had.dat <- subset(ff.dat, Species == "Haddock")
+
+## total weights
+weight.dat <- read.xls("../data/Foyle Fisher T90 Trial_edited.xlsx", 
+                       sheet = "Weights",
+                       stringsAsFactors = FALSE)
+
+weight.dat <- subset(weight.dat, Haul.No %in% c(2,3, 6:13, 15:18))
+
+names(weight.dat)[names(weight.dat) == "Haul.No."] <- "Haul.No"
+names(weight.dat)[names(weight.dat) == "Control...Experimental"] <- "Control.Experimental"
+
+weight.dat$Total.Weight <- as.numeric(weight.dat$Total.Weight)
+
+weights.long <- aggregate(weight.dat$Total.Weight, by = list(weight.dat$Haul.No, weight.dat$Control.Experimental), sum, na.rm = TRUE)
+## na.rm as 
+weight.dat[134, ]
+
+weights.wide <- data.frame(Haul.No = weights.long[weights.long$Group.2 == "Experimental", "Group.1"],
+                           T90W = weights.long[weights.long$Group.2 == "Experimental", "x"],
+                           DiamondW = weights.long[weights.long$Group.2 == "Control", "x"])
+
+
+
+@ 
+
+<<eval = TRUE>>=
+## get count per length bin per haul by experimental gear
+library(reshape)
+
+## variables to keep 
+vars2keep <- c("Control.Experimental", "Length.cm", "Haul.No", "Count")
+
+## melt the data frame
+plaice.dat.melt <- melt(plaice.dat[, vars2keep], 
+                    id = c("Control.Experimental", "Length.cm", "Haul.No"))
+
+## re-form the dataframe in required format 
+plaice.dat.cast <- cast(plaice.dat.melt, Length.cm + Haul.No ~ Control.Experimental  + variable)
+plaice.dat.cast <- plaice.dat.cast[order(plaice.dat.cast$Haul.No, plaice.dat.cast$Length.cm), ]
+plaice.dat.cast[is.na(plaice.dat.cast)] <- 0
+
+## show the first few rows
+head(plaice.dat.cast, 2)
+
+## format the subsampling ratio similarly
+vars2keep <- c("Control.Experimental", "Haul.No", "SUBSRATIO")
+subs.melt <- melt(unique(plaice.dat[, vars2keep]), id = c("Control.Experimental", "Haul.No"))
+subs.cast <- cast(subs.melt, Haul.No  ~ Control.Experimental + variable)
+
+## get net position of each
+vars2keep <- c("Control.Experimental", "Haul.No", "Net.position")
+netpos.melt <- melt(unique(plaice.dat[, vars2keep]), id = c("Control.Experimental", "Haul.No"))
+netpos.cast <- cast(netpos.melt, Haul.No  ~ Control.Experimental + variable)
+
+## merge counts and subsampling ratio back together 
+plaice.dat.cast0 <- merge(plaice.dat.cast, subs.cast, by = "Haul.No", all.x = TRUE)
+
+plaice.dat.cast0 <- merge(plaice.dat.cast0, netpos.cast, by = "Haul.No", all.x = TRUE)
+
+## merge in the total weights
+plaice.dat.cast <- merge(plaice.dat.cast0, weights.wide, by = "Haul.No", all.x = TRUE)
+
+## show first few lines
+head(plaice.dat.cast, 2)
+
+## Extract the matrix of counts
+count.vars <- c("T90 80 mm_Count", "Diamond 80 mm_Count")
+plaice.count.mat <- as.matrix(plaice.dat.cast[, count.vars])
+
+## Extract the matrix of subsampling ratios
+subsratio.vars <- c("T90 80 mm_SUBSRATIO", "Diamond 80 mm_SUBSRATIO")
+subsratio.mat <- as.matrix(plaice.dat.cast[, subsratio.vars])
+
+## Create the offset
+offset.mat <- log(apply(subsratio.mat, 2, FUN = 
+                        function(zz){zz/subsratio.mat[,1]}))
+
+@ 
+
+\section{Plots}
+
+
+Plot the data 
+<<eval = TRUE, fig.allign = "center", fig.cap = "Proportion of plaice catch retained per haul. Each point represents the proportion of the plaice catch (in number) per haul and length class retained in the T90 experimental gear. The size of the point is proportional to the log of the count.", fig.width = 8, fig.height = 7>>=
+library(ggplot2)
+
+## Get the proportions
+raised.count.mesh <- as.matrix(plaice.dat.cast[, count.vars]) / subsratio.mat
+
+prop.mesh <- prop.table(raised.count.mesh, margin = 1)
+m <- dim(prop.mesh)[1]
+
+prop.mesh.df <- data.frame(
+                  Length.cm = plaice.dat.cast$Length.cm,
+                  Haul.No = plaice.dat.cast$Haul.No,
+                  proportion = c(prop.mesh[,1]),
+                  total.count = rowSums(raised.count.mesh))
+
+plaice.agg.count <- aggregate(plaice.dat.cast[, c("T90 80 mm_Count", "Diamond 80 mm_Count")], list(Length.cm = plaice.dat.cast$Length.cm), sum)
+plaice.agg.count$proportion <- prop.table(as.matrix(plaice.agg.count[,2:3]), margin = 1)[,1]
+
+plaice.plot <- ggplot(prop.mesh.df, aes(x = Length.cm, y = proportion)) + 
+  geom_point(colour = "#FF9900", alpha = 0.5, aes(size = log(total.count))) + 
+  ylab("Proportion of Plaice in T90") + theme(legend.position = "none") + 
+  geom_line(data = plaice.agg.count, colour = "grey")
+
+plaice.plot
+
+@
+
+\section{Models}
+
+<<eval = FALSE>>=
+library(mgcv)
+
+plaice.dat.cast$offset <- offset.mat[,1]
+plaice.dat.cast$fHaul <- as.factor(plaice.dat.cast$Haul.No)
+plaice.dat.cast$dum <- 1
+
+names(plaice.dat.cast)[names(plaice.dat.cast) == "T90 80 mm_Net.position"] <- "T90net.pos"
+
+
+gam0 <- gam(plaice.count.mat ~ s(Length.cm) + offset(offset) +
+            s(fHaul, bs="re", by = dum) + 
+            T90net.pos, 
+            data = plaice.dat.cast, family = binomial)
+
+pred.df <- data.frame(Length.cm = min(plaice.dat$Length.cm):max(plaice.dat$Length.cm), 
+                      offset = 0, dum = 0, fHaul = factor(2))
+
+pred0 <- predict(gam0, newdata = pred.df, se.fit = TRUE)
+
+pred.df$proportion <- plogis(pred0$fit)
+pred.df$upper <- plogis(pred0$fit + 1.96 * pred0$se.fit)
+pred.df$lower <- plogis(pred0$fit - 1.96 * pred0$se.fit)
+
+plaice.plot2 <- plaice.plot + geom_ribbon(data = pred.df, aes(ymin = lower, ymax = upper), fill = "blue", colour = NA, alpha = 0.2) +
+  geom_line(data = pred.df, colour = "darkblue") + geom_hline(yintercept = 0.5, linetype = "dashed")
+
+## GLMM
+library(lme4)
+glm0 <- glmer(plaice.count.mat ~ poly(Length.cm,3)  + offset(offset) + (1|fHaul), data = plaice.dat.cast, family = binomial)
+
+pred0glm <- predict(glm0, newdata = pred.df, se.fit = TRUE)
+
+pred.df$proportion.glm <- plogis(pred0glm$fit)
+pred.df$upper.glm <- plogis(pred0glm$fit + 1.96 * pred0glm$se.fit)
+pred.df$lower.glm <- plogis(pred0glm$fit - 1.96 * pred0glm$se.fit)
+
+plaice.plot2 + geom_ribbon(data = pred.df, aes(ymin = lower.glm, ymax = upper.glm), fill = "red", colour = NA, alpha = 0.2) +
+  geom_line(data = pred.df, aes(y = proportion.glm), colour = "darkred") 
+
+@ 
+
+
+Multinomial
+
+<<>>=
+library(nnet)
+
+mnom.fit <- multinom(plaice.count.mat ~
+                     scale.fun(Length.cm) + ##scale.fun(Carapace.length^2) +
+                     ##netconfig +
+                     offset(offset.mat),
+                     data = plaice.dat.cast)
+
+Y <- plaice.count.mat
+X <- model.matrix(mnom.fit)
+n <- nrow(Y)
+m <- ncol(Y)
+
+gps <- as.numeric(plaice.dat.cast$fHaul)
+ngp <- length(unique(gps))
+
+library(TMB)
+dyn.load(dynlib("../../diamond/R/multinomial_re_model"))
+
+## WEIGHTS
+bulk.weights.mat <- as.matrix(plaice.dat.cast[, c("T90W", "DiamondW")])
+colnames(bulk.weights.mat) <- rownames(bulk.weights.mat) <- NULL
+scale.fun <- function(x){(x - mean(x)) / sd(x)}
+W <- scale.fun(bulk.weights.mat) ## to maintain relative weights of nets
+
+## WEIGHTS x CL INTERACTION
+##WxCL <- scale.fun(bulk.weights.mat * plaice.dat.cast[, "Carapace.length"])
+
+## POSITION X CL INTERACTION
+##PIxCL <- PI * scale.fun(plaice.dat.cast$Carapace.length)
+##SIxCL <- SI * scale.fun(plaice.dat.cast$Carapace.length)
+##SOxCL <- SO * scale.fun(plaice.dat.cast$Carapace.length)
+
+## FILL THE CONDITIONAL ARRAY
+Xcond.array <- array(NA, dim = c(n, m, 1))
+## port is the baseline
+is.starboard <- ifelse(plaice.dat.cast[, "T90net.pos"] == "Starboard", 1, 0)
+Xcond.array[, , 1] <- cbind(is.starboard, 1- is.starboard)
+##Xcond.array[, , 2] <- SI
+##Xcond.array[, , 3] <- SO
+##Xcond.array[, , 4] <- PIxCL
+##Xcond.array[, , 5] <- SIxCL
+##Xcond.array[, , 6] <- SOxCL
+
+## PREDICTION OBJECTS FOR TMB
+## X
+npred <- 50
+Lpred <- seq(min(plaice.dat.cast$Length.cm), max(plaice.dat.cast$Length.cm), length = npred)
+Lpred.sc <- with(plaice.dat.cast, (Lpred - mean(Length.cm)) / sd(Length.cm))
+Xpred <- cbind(1, Lpred.sc)
+
+## Xcond
+Xcondpred <- array(NA, dim = c(npred, m, 1))
+
+## proportions in given positions in the data
+Xcondpred[, , 1] <- 1/2
+
+## W pred
+W.means <- as.numeric(apply(weights.wide[, -1], 2, mean))
+mean.W <- mean(unlist(weights.wide[, -1]))
+sd.W <- sd(unlist(weights.wide[, -1]))
+Wsc.means <- (W.means - mean.W) / sd.W
+Wpred <- matrix(as.numeric(Wsc.means), nr = 1)[rep(1, npred), ]
+
+## WxCL pred
+##mean.WxCL <- mean(unlist(plaice.dat.cast[, W.names] * plaice.dat.cast[, "Carapace.length"]))
+##sd.WxCL <- sd(unlist(plaice.dat.cast[, W.names] * plaice.dat.cast[, "Carapace.length"]))
+##WxCLpred <- (t(sapply(CLpred, FUN = function(x){ matrix(x * W.means)})) - mean.WxCL) / sd.WxCL
+##rm(obj)
+
+WxCL <- matrix(1, nr = n, nc = m)
+WxCLpred <- matrix(1, nr = npred, nc = m)
+
+
+obj <- MakeADFun(
+    data = list(
+      Y = Y,
+      X = X,
+      Xcond = Xcond.array,
+      W = W,
+      WxCL = WxCL,
+      Offset = offset.mat,
+      gp = gps - 1,
+      ngp = ngp,
+      ## prediction matrices
+      Xpred = Xpred,
+      Xcondpred = Xcondpred,
+      Wpred = Wpred,
+      WxCLpred = WxCLpred),
+      parameters = list(
+        beta0 = matrix(0, ncol = ncol(Y) - 1, nrow = ncol(X)),
+        betacond = rep(0, dim(Xcond.array)[3]),
+        gammaw = rep(0, 2),
+        gammawcl = rep(0, 2),
+        ##a = c(1,0,1,0,0,1), ## when not converging, sometimes need to change these values
+        a = c(1.01, 0, 1.01, 0, 0, 1.01),
+        u0 = matrix(0, ncol = ncol(Y) - 1, nrow = ngp)
+        ),
+      map = list(
+        ## if need to fix any parameters
+        ##beta0 = factor(c(1,2,3,NA,4,NA)),
+        ##betacond  = factor(c(1,NA,2,3,NA,4)),
+        ##gammaw = factor(c(1,2)),
+        gammawcl = factor(rep(NA, 2))
+        ##a = factor(rep(NA, 6)),
+        ##u0 = factor(matrix(NA, ncol = ncol(Y) - 1, nrow = ngp))
+        ),
+    random = c("u0"),
+    DLL = "multinomial_re_model"
+    )
+
+(opt<-do.call("optim", obj))
+## (opt_nore<-do.call("optim", obj))
+
+
+
+
+
+
+
+
+
+
+@ 
+
+
+\end{document}
