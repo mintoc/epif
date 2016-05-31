@@ -67,8 +67,7 @@ u.mat <- cbind(0, u.mat0[rep(1:ngp, each = length(cl)), ])
 
 gps <- as.numeric(dat$haul)
 
-## linear predictor
-eta <- X %*% beta + Xcond * betacond + u.mat
+## linear predictoreta <- X %*% beta + Xcond * betacond + u.mat
 
 p <- exp(eta) / rowSums(exp(eta))
 

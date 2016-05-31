@@ -69,7 +69,7 @@ PROCEDURE_SECTION
   dvar_matrix Sigma = L * trans(L);
   // log-likelihood for the random effects - MVN 
   for (int i=1;i<=ngp;i++){
-    nll += 0.5 * (log(2.0*M_PI) + ln_det(Sigma) + u0(i) * solve(Sigma,u0(i)));
+    nll += 0.5 * ((m-1) * log(2.0*M_PI) + ln_det(Sigma) + u0(i) * solve(Sigma,u0(i)));
   }
   //---------------
   // FIXED EFFECTS 
