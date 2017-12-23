@@ -21,10 +21,8 @@ emacs-config.el
 *.aux
 wp1/gear_trials/tex
 =======
-*.cpp
 *.log
 *.obj
-*.cpp
 *.htp
 *.so
 *.o
