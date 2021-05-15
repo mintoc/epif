@@ -5,7 +5,7 @@ Multinomial mixed effects code for analysing multi-rig catch-comparison trials. 
 Code is maintained by Cóilín Minto and Brian Burke and developed in close collaboration with: Daragh Browne, Ronan Cosgrove, Daniel McDonald, Rick Officer and Michael Keatinge.
 
 ### Reference
-Browne, D., Minto, C., Cosgrove, R., Burke, B., McDonald, D., Officer, R. and Keatinge, M (_in review_). A general catch comparison method for multi-gear trials: application to a quad-rig trawling fishery for _Nephrops_.
+Browne, D., Minto, C., Cosgrove, R., Burke, B., McDonald, D., Officer, R. and Keatinge, M (2017). A general catch comparison method for multi-gear trials: application to a quad-rig trawling fishery for _Nephrops_. *ICES Journal of Marine Science*, 74, 1458–1468. (2017) 
 
 ### Acknowledgements
 This work is gratefully funded by [an Bord Iascaigh Mhara (BIM) Ireland](http://www.bim.ie)
